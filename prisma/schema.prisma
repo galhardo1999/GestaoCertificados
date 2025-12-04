@@ -1,0 +1,144 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  name          String?
+  password      String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  certificates  Certificate[]
+  clients       Client[]
+  whatsappTemplate String?
+  logoUrl       String?
+  cnpj          String?
+  phone1        String?
+  phone2        String?
+  
+  // Address
+  address       String?
+  number        String?
+  neighborhood  String?
+  city          String?
+  state         String?
+  zipCode       String?
+  role          Role          @default(USER)
+  
+  // Team Member Relation
+  masterUserId  String?
+  masterUser    User?         @relation("TeamMembers", fields: [masterUserId], references: [id])
+  teamMembers   User[]        @relation("TeamMembers")
+
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Client {
+  id              String        @id @default(cuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Client data
+  companyName     String
+  cnpj            String
+  phone           String?
+  address         String?
+  number          String?
+  neighborhood    String?
+  city            String?
+  state           String?
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  certificates    Certificate[]
+
+  @@index([userId])
+  @@map("clients")
+}
+
+model Certificate {
+  id                String            @id @default(cuid())
+  userId            String
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Optional client relation
+  clientId          String?
+  client            Client?           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  // File storage
+  fileKey           String            // S3 object key
+  
+  // Certificate metadata (extracted from .pfx)
+  holderName        String            // Nome do titular do certificado
+  expirationDate    DateTime          // Data de vencimento
+  
+  // Status
+  status            CertificateStatus @default(ACTIVE)
+  
+  // Optional metadata (JSON field for additional info)
+  metadata          Json?
+  
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  notificationLogs  NotificationLog[]
+
+  @@index([userId])
+  @@index([clientId])
+  @@index([expirationDate])
+  @@index([status])
+  @@map("certificates")
+}
+
+enum CertificateStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+model NotificationLog {
+  id              String           @id @default(cuid())
+  certificateId   String
+  certificate     Certificate      @relation(fields: [certificateId], references: [id], onDelete: Cascade)
+  
+  notificationType NotificationType
+  sentAt          DateTime         @default(now())
+  
+  @@unique([certificateId, notificationType, sentAt])
+  @@index([certificateId])
+  @@map("notification_logs")
+}
+
+enum NotificationType {
+  PLANNING_45_DAYS    // 45 dias - Planejamento
+  URGENCY_15_DAYS     // 15 dias - Urgência
+  CRITICAL_0_DAYS     // 0 dias - Crítico
+}
+
+model Plan {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  price       Float
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("plans")
+}
