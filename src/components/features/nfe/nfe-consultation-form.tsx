@@ -4,16 +4,18 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, Search, FileCode, AlertCircle } from 'lucide-react'
+import { Loader2, Search, FileCode, Check, X } from 'lucide-react'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command"
 
 interface Client {
     id: string
@@ -27,6 +29,7 @@ interface NFeConsultationFormProps {
 
 export function NFeConsultationForm({ clients }: NFeConsultationFormProps) {
     const [selectedClientId, setSelectedClientId] = useState('')
+    const [searchTerm, setSearchTerm] = useState('')
     const [accessKey, setAccessKey] = useState('')
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
@@ -77,20 +80,71 @@ export function NFeConsultationForm({ clients }: NFeConsultationFormProps) {
                 <CardContent>
                     <form onSubmit={handleConsult} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
+                            <div className="space-y-2 flex flex-col">
                                 <Label>Cliente</Label>
-                                <Select value={selectedClientId} onValueChange={setSelectedClientId}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Selecione o cliente" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {clients.map(client => (
-                                            <SelectItem key={client.id} value={client.id}>
-                                                {client.nomeEmpresa} ({client.cnpj})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                {selectedClientId ? (
+                                    <div className="flex items-center justify-between border rounded-md px-3 py-2 bg-background h-10">
+                                        <span className="text-sm">{clients.find(c => c.id === selectedClientId)?.nomeEmpresa}</span>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6"
+                                            onClick={(e) => {
+                                                e.preventDefault()
+                                                setSelectedClientId('')
+                                                setSearchTerm('')
+                                            }}
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="border rounded-md relative">
+                                        <Command shouldFilter={false} className="overflow-visible">
+                                            <CommandInput
+                                                placeholder="Buscar cliente..."
+                                                value={searchTerm}
+                                                onValueChange={setSearchTerm}
+                                                className="h-10"
+                                            />
+                                            {searchTerm.length > 0 && (
+                                                <div className="absolute top-full left-0 right-0 bg-white border rounded-b-md shadow-lg z-50 max-h-[200px] overflow-y-auto">
+                                                    <CommandList>
+                                                        <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
+                                                        <CommandGroup>
+                                                            {clients
+                                                                .filter(client => client.nomeEmpresa.toLowerCase().includes(searchTerm.toLowerCase()))
+                                                                .map((client) => (
+                                                                    <div
+                                                                        key={client.id}
+                                                                        onPointerDown={(e) => {
+                                                                            e.preventDefault()
+                                                                            e.stopPropagation()
+                                                                            setSelectedClientId(client.id)
+                                                                            setSearchTerm('')
+                                                                        }}
+                                                                    >
+                                                                        <CommandItem
+                                                                            value={client.nomeEmpresa}
+                                                                            className="cursor-pointer"
+                                                                        >
+                                                                            <Check
+                                                                                className={cn(
+                                                                                    "mr-2 h-4 w-4",
+                                                                                    selectedClientId === client.id ? "opacity-100" : "opacity-0"
+                                                                                )}
+                                                                            />
+                                                                            <span>{client.nomeEmpresa}</span>
+                                                                        </CommandItem>
+                                                                    </div>
+                                                                ))}
+                                                        </CommandGroup>
+                                                    </CommandList>
+                                                </div>
+                                            )}
+                                        </Command>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="space-y-2">
