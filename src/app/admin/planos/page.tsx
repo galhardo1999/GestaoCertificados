@@ -9,8 +9,8 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import { PlanActions } from '@/components/admin/plan-actions'
-import { SearchInput } from '@/components/search-input'
-import { Pagination } from '@/components/pagination'
+import { SearchInput } from '@/components/shared/search-input'
+import { Pagination } from '@/components/shared/pagination'
 import { Badge } from '@/components/ui/badge'
 
 export default async function PlansPage({

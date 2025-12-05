@@ -11,6 +11,7 @@ interface CnpjData {
         city: string
         state: string
     }
+    phone?: string
     error?: string
 }
 
@@ -64,7 +65,8 @@ export async function fetchCnpjData(cnpj: string): Promise<{ success: boolean; d
                     district: data.address?.district, // Bairro
                     city: data.address?.city,
                     state: data.address?.state
-                }
+                },
+                phone: data.phones?.[0] ? `(${data.phones[0].area}) ${data.phones[0].number}` : undefined
             }
         }
 

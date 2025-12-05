@@ -10,135 +10,135 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id            String        @id @default(cuid())
-  email         String        @unique
-  name          String?
-  password      String
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  certificates  Certificate[]
-  clients       Client[]
-  whatsappTemplate String?
-  logoUrl       String?
-  cnpj          String?
-  phone1        String?
-  phone2        String?
+model Usuario {
+  id               String        @id @default(cuid())
+  email            String        @unique
+  nome             String?
+  senha            String
+  criadoEm         DateTime      @default(now())
+  atualizadoEm     DateTime      @updatedAt
+  certificados     Certificado[]
+  clientes         Cliente[]
+  templateWhatsapp String?
+  urlLogo          String?
+  cnpj             String?
+  telefone1        String?
+  telefone2        String?
   
-  // Address
-  address       String?
-  number        String?
-  neighborhood  String?
-  city          String?
-  state         String?
-  zipCode       String?
-  role          Role          @default(USER)
+  // Endereço
+  endereco         String?
+  numero           String?
+  bairro           String?
+  cidade           String?
+  estado           String?
+  cep              String?
+  funcao           Funcao        @default(USUARIO)
   
-  // Team Member Relation
-  masterUserId  String?
-  masterUser    User?         @relation("TeamMembers", fields: [masterUserId], references: [id])
-  teamMembers   User[]        @relation("TeamMembers")
+  // Relação Membros da Equipe
+  usuarioMestreId  String?
+  usuarioMestre    Usuario?      @relation("MembrosEquipe", fields: [usuarioMestreId], references: [id])
+  membrosEquipe    Usuario[]     @relation("MembrosEquipe")
 
-  @@map("users")
+  @@map("usuarios")
 }
 
-enum Role {
-  USER
+enum Funcao {
+  USUARIO
   ADMIN
 }
 
-model Client {
+model Cliente {
   id              String        @id @default(cuid())
-  userId          String
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  usuarioId       String
+  usuario         Usuario       @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   
-  // Client data
-  companyName     String
+  // Dados do Cliente
+  nomeEmpresa     String
   cnpj            String
-  phone           String?
-  address         String?
-  number          String?
-  neighborhood    String?
-  city            String?
-  state           String?
+  telefone        String?
+  endereco        String?
+  numero          String?
+  bairro          String?
+  cidade          String?
+  estado          String?
   
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  criadoEm        DateTime      @default(now())
+  atualizadoEm    DateTime      @updatedAt
   
-  certificates    Certificate[]
+  certificados    Certificado[]
 
-  @@index([userId])
-  @@map("clients")
+  @@index([usuarioId])
+  @@map("clientes")
 }
 
-model Certificate {
+model Certificado {
   id                String            @id @default(cuid())
-  userId            String
-  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  usuarioId         String
+  usuario           Usuario           @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   
-  // Optional client relation
-  clientId          String?
-  client            Client?           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  // Relação opcional com cliente
+  clienteId         String?
+  cliente           Cliente?          @relation(fields: [clienteId], references: [id], onDelete: Cascade)
   
-  // File storage
-  fileKey           String            // S3 object key
+  // Armazenamento de arquivo
+  chaveArquivo      String            // S3 object key
   
-  // Certificate metadata (extracted from .pfx)
-  holderName        String            // Nome do titular do certificado
-  expirationDate    DateTime          // Data de vencimento
+  // Metadados do certificado (extraídos do .pfx)
+  nomeTitular       String            // Nome do titular do certificado
+  dataVencimento    DateTime          // Data de vencimento
   
   // Status
-  status            CertificateStatus @default(ACTIVE)
+  status            StatusCertificado @default(ATIVO)
   
-  // Optional metadata (JSON field for additional info)
-  metadata          Json?
+  // Metadados opcionais (campo JSON para informações adicionais)
+  metadados         Json?
   
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  criadoEm          DateTime          @default(now())
+  atualizadoEm      DateTime          @updatedAt
   
-  notificationLogs  NotificationLog[]
+  logsNotificacao   LogNotificacao[]
 
-  @@index([userId])
-  @@index([clientId])
-  @@index([expirationDate])
+  @@index([usuarioId])
+  @@index([clienteId])
+  @@index([dataVencimento])
   @@index([status])
-  @@map("certificates")
+  @@map("certificados")
 }
 
-enum CertificateStatus {
-  ACTIVE
-  EXPIRED
-  REVOKED
+enum StatusCertificado {
+  ATIVO
+  EXPIRADO
+  REVOGADO
 }
 
-model NotificationLog {
-  id              String           @id @default(cuid())
-  certificateId   String
-  certificate     Certificate      @relation(fields: [certificateId], references: [id], onDelete: Cascade)
+model LogNotificacao {
+  id               String           @id @default(cuid())
+  certificadoId    String
+  certificado      Certificado      @relation(fields: [certificadoId], references: [id], onDelete: Cascade)
   
-  notificationType NotificationType
-  sentAt          DateTime         @default(now())
+  tipoNotificacao  TipoNotificacao
+  enviadoEm        DateTime         @default(now())
   
-  @@unique([certificateId, notificationType, sentAt])
-  @@index([certificateId])
-  @@map("notification_logs")
+  @@unique([certificadoId, tipoNotificacao, enviadoEm])
+  @@index([certificadoId])
+  @@map("logs_notificacao")
 }
 
-enum NotificationType {
-  PLANNING_45_DAYS    // 45 dias - Planejamento
-  URGENCY_15_DAYS     // 15 dias - Urgência
-  CRITICAL_0_DAYS     // 0 dias - Crítico
+enum TipoNotificacao {
+  PLANEJAMENTO_45_DIAS    // 45 dias - Planejamento
+  URGENCIA_15_DIAS        // 15 dias - Urgência
+  CRITICO_0_DIAS          // 0 dias - Crítico
 }
 
-model Plan {
+model Plano {
   id          String   @id @default(cuid())
-  code        String   @unique
-  name        String
-  price       Float
-  description String?
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  codigo      String   @unique
+  nome        String
+  preco       Float
+  descricao   String?
+  ativo       Boolean  @default(true)
+  criadoEm    DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
 
-  @@map("plans")
+  @@map("planos")
 }

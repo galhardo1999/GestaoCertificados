@@ -18,19 +18,19 @@ export const authOptions: NextAuthOptions = {
                     throw new Error('Email e senha são obrigatórios')
                 }
 
-                const user = await prisma.user.findUnique({
+                const user = await prisma.usuario.findUnique({
                     where: {
                         email: credentials.email,
                     },
                 })
 
-                if (!user || !user.password) {
+                if (!user || !user.senha) {
                     throw new Error('Credenciais inválidas')
                 }
 
                 const isPasswordValid = await bcrypt.compare(
                     credentials.password,
-                    user.password
+                    user.senha
                 )
 
                 if (!isPasswordValid) {
@@ -40,9 +40,9 @@ export const authOptions: NextAuthOptions = {
                 return {
                     id: user.id,
                     email: user.email,
-                    name: user.name,
-                    role: user.role,
-                    masterUserId: user.masterUserId,
+                    name: user.nome,
+                    role: user.funcao,
+                    masterUserId: user.usuarioMestreId,
                 }
             },
         }),

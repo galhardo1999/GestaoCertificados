@@ -15,11 +15,11 @@ export async function getUsers(
         throw new Error('Unauthorized')
     }
 
-    const where: any = { role: 'USER', masterUserId: null }
+    const where: any = { funcao: 'USUARIO', usuarioMestreId: null }
 
     if (search) {
         where.OR = [
-            { name: { contains: search, mode: 'insensitive' } },
+            { nome: { contains: search, mode: 'insensitive' } },
             { cnpj: { contains: search, mode: 'insensitive' } },
             { email: { contains: search, mode: 'insensitive' } }
         ]
@@ -28,26 +28,26 @@ export async function getUsers(
     const skip = (page - 1) * limit
 
     const [users, total] = await Promise.all([
-        prisma.user.findMany({
+        prisma.usuario.findMany({
             where,
             select: {
                 id: true,
-                name: true,
+                nome: true,
                 email: true,
                 cnpj: true,
-                createdAt: true,
+                criadoEm: true,
                 _count: {
                     select: {
-                        certificates: true,
-                        clients: true
+                        certificados: true,
+                        clientes: true
                     }
                 }
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { criadoEm: 'desc' },
             skip,
             take: limit
         }),
-        prisma.user.count({ where })
+        prisma.usuario.count({ where })
     ])
 
     return {

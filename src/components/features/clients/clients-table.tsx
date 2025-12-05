@@ -5,10 +5,10 @@ import { ViewClientModal } from './view-client-modal'
 import { EditClientModal } from './edit-client-modal'
 import { DeleteClientDialog } from './delete-client-dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { StatusBadge } from './status-badge'
-import { calculateDaysRemaining, formatDateBR } from '@/lib/utils'
+import { StatusBadge } from '@/components/shared/status-badge'
+import { calculateDaysRemaining, formatDateBR, formatCNPJ, formatPhone } from '@/lib/utils'
 import { Pencil } from 'lucide-react'
-import { Button } from './ui/button'
+import { Button } from '@/components/ui/button'
 
 interface ClientsTableProps {
     clients: any[]
@@ -41,9 +41,9 @@ export function ClientsTable({ clients, userId }: ClientsTableProps) {
                 </TableHeader>
                 <TableBody>
                     {clients.map((client) => {
-                        const certificate = client.certificates[0]
+                        const certificate = client.certificados[0]
                         const daysRemaining = certificate
-                            ? calculateDaysRemaining(certificate.expirationDate)
+                            ? calculateDaysRemaining(certificate.dataVencimento)
                             : null
 
                         return (
@@ -57,16 +57,16 @@ export function ClientsTable({ clients, userId }: ClientsTableProps) {
                                 </TableCell>
                                 <TableCell>
                                     {certificate
-                                        ? formatDateBR(certificate.expirationDate)
+                                        ? formatDateBR(certificate.dataVencimento)
                                         : '-'}
                                 </TableCell>
                                 <TableCell>
                                     <div>
-                                        <div className="font-medium text-gray-900">{client.companyName}</div>
-                                        <div className="text-xs text-gray-500">{client.cnpj}</div>
+                                        <div className="font-medium text-gray-900">{client.nomeEmpresa}</div>
+                                        <div className="text-xs text-gray-500">{formatCNPJ(client.cnpj)}</div>
                                     </div>
                                 </TableCell>
-                                <TableCell>{client.phone || '-'}</TableCell>
+                                <TableCell>{formatPhone(client.telefone) || '-'}</TableCell>
                                 <TableCell className="text-right">
                                     <div
                                         className="flex items-center justify-end gap-2"
@@ -75,7 +75,7 @@ export function ClientsTable({ clients, userId }: ClientsTableProps) {
                                         <EditClientModal client={client} userId={userId} />
                                         <DeleteClientDialog
                                             clientId={client.id}
-                                            clientName={client.companyName}
+                                            clientName={client.nomeEmpresa}
                                         />
                                     </div>
                                 </TableCell>

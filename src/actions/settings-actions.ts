@@ -38,23 +38,29 @@ export async function updateSettings(formData: FormData) {
             logoUrl = fileKey
         }
 
-        const currentUser = await prisma.user.findUnique({
+        const currentUser = await prisma.usuario.findUnique({
             where: { id: userId },
-            select: { masterUserId: true }
+            select: { usuarioMestreId: true, urlLogo: true }
         })
 
-        if (currentUser?.masterUserId) {
+        if (currentUser?.usuarioMestreId) {
             return { success: false, message: 'Apenas o usuário principal pode alterar as configurações.' }
         }
 
-        await prisma.user.update({
+        // Delete old logo if a new one is being uploaded
+        if (logoUrl && currentUser?.urlLogo) {
+            const { deleteFileFromS3 } = await import('@/lib/s3')
+            await deleteFileFromS3(currentUser.urlLogo).catch(console.error)
+        }
+
+        await prisma.usuario.update({
             where: { id: userId },
             data: {
-                name,
-                whatsappTemplate,
-                phone1,
-                phone2,
-                ...(logoUrl && { logoUrl }),
+                nome: name,
+                templateWhatsapp: whatsappTemplate,
+                telefone1: phone1,
+                telefone2: phone2,
+                ...(logoUrl && { urlLogo: logoUrl }),
             },
         })
 

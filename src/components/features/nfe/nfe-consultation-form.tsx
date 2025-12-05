@@ -17,7 +17,7 @@ import { toast } from 'sonner'
 
 interface Client {
     id: string
-    companyName: string
+    nomeEmpresa: string
     cnpj: string
 }
 
@@ -86,7 +86,7 @@ export function NFeConsultationForm({ clients }: NFeConsultationFormProps) {
                                     <SelectContent>
                                         {clients.map(client => (
                                             <SelectItem key={client.id} value={client.id}>
-                                                {client.companyName} ({client.cnpj})
+                                                {client.nomeEmpresa} ({client.cnpj})
                                             </SelectItem>
                                         ))}
                                     </SelectContent>

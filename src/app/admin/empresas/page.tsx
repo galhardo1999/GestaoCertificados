@@ -1,5 +1,5 @@
 import { getUsers } from '@/actions/admin-actions'
-import { CreateUserModal } from '@/components/create-user-modal'
+import { CreateUserModal } from '@/components/features/team/create-user-modal'
 import {
     Table,
     TableBody,
@@ -14,8 +14,8 @@ import { UserActions } from '@/components/admin/user-actions'
 import Link from 'next/link'
 import { CompanyRow } from '@/components/admin/company-row'
 
-import { SearchInput } from '@/components/search-input'
-import { Pagination } from '@/components/pagination'
+import { SearchInput } from '@/components/shared/search-input'
+import { Pagination } from '@/components/shared/pagination'
 
 export default async function UsersPage({
     searchParams,

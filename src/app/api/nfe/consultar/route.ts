@@ -15,25 +15,25 @@ export async function POST(req: Request) {
         }
 
         // 1. Buscar o certificado do cliente
-        const client = await prisma.client.findUnique({
+        const client = await prisma.cliente.findUnique({
             where: { id: clientId },
             include: {
-                certificates: {
-                    where: { status: 'ACTIVE' },
-                    orderBy: { expirationDate: 'desc' },
+                certificados: {
+                    where: { status: 'ATIVO' },
+                    orderBy: { dataVencimento: 'desc' },
                     take: 1
                 }
             }
         });
 
-        if (!client || client.certificates.length === 0) {
+        if (!client || client.certificados.length === 0) {
             return NextResponse.json({ error: 'Cliente não possui certificado ativo' }, { status: 404 });
         }
 
-        const certificate = client.certificates[0];
+        const certificate = client.certificados[0];
 
         // 2. Baixar o arquivo PFX do S3
-        const downloadUrl = await getSignedDownloadUrl(certificate.fileKey);
+        const downloadUrl = await getSignedDownloadUrl(certificate.chaveArquivo);
         const pfxResponse = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
         const pfx = pfxResponse.data;
 

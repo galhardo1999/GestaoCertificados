@@ -27,9 +27,9 @@ interface EditClientModalProps {
 
 export function EditClientModal({ client, userId }: EditClientModalProps) {
     const [open, setOpen] = useState(false)
-    const [companyName, setCompanyName] = useState(client.companyName)
+    const [companyName, setCompanyName] = useState(client.nomeEmpresa)
     const [cnpj, setCnpj] = useState(client.cnpj)
-    const [phone, setPhone] = useState(client.phone || '')
+    const [phone, setPhone] = useState(client.telefone || '')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
 
@@ -125,11 +125,11 @@ export function EditClientModal({ client, userId }: EditClientModalProps) {
     }
 
     // Check if latest certificate is expiring soon (<= 15 days)
-    const latestCertificate = client.certificates && client.certificates.length > 0
-        ? client.certificates[0]
+    const latestCertificate = client.certificados && client.certificados.length > 0
+        ? client.certificados[0]
         : null
 
-    const daysRemaining = latestCertificate ? calculateDaysRemaining(latestCertificate.expirationDate) : null
+    const daysRemaining = latestCertificate ? calculateDaysRemaining(latestCertificate.dataVencimento) : null
     const isExpiringSoon = daysRemaining !== null && daysRemaining <= 15
 
     return (
@@ -228,7 +228,7 @@ export function EditClientModal({ client, userId }: EditClientModalProps) {
                                 <div className="border rounded-lg p-4 bg-blue-50/50 space-y-4">
                                     <div className="flex items-center justify-between">
                                         <h4 className="font-medium text-sm text-blue-900">
-                                            {client.certificates && client.certificates.length > 0 ? 'Renovar Certificado' : 'Adicionar Certificado'}
+                                            {client.certificados && client.certificados.length > 0 ? 'Renovar Certificado' : 'Adicionar Certificado'}
                                         </h4>
                                         {!showUpload && (
                                             <Button size="sm" onClick={() => setShowUpload(true)} variant="outline" className="h-8 bg-white">
@@ -317,12 +317,12 @@ export function EditClientModal({ client, userId }: EditClientModalProps) {
                                 </div>
                             )}
 
-                            {client.certificates && client.certificates.length > 0 ? (
+                            {client.certificados && client.certificados.length > 0 ? (
                                 <div className="space-y-6">
                                     {(() => {
                                         // Sort certificates by expiration date descending
-                                        const sortedCertificates = [...client.certificates].sort((a, b) =>
-                                            new Date(b.expirationDate).getTime() - new Date(a.expirationDate).getTime()
+                                        const sortedCertificates = [...client.certificados].sort((a, b) =>
+                                            new Date(b.dataVencimento).getTime() - new Date(a.dataVencimento).getTime()
                                         )
 
                                         // The first one is the "Active" one (longest validity)
@@ -330,7 +330,7 @@ export function EditClientModal({ client, userId }: EditClientModalProps) {
 
                                         // Group by year
                                         const groupedCertificates = sortedCertificates.reduce((acc, cert) => {
-                                            const year = new Date(cert.expirationDate).getFullYear()
+                                            const year = new Date(cert.dataVencimento).getFullYear()
                                             if (!acc[year]) acc[year] = []
                                             acc[year].push(cert)
                                             return acc
@@ -345,7 +345,7 @@ export function EditClientModal({ client, userId }: EditClientModalProps) {
                                                 <div className="space-y-3">
                                                     {groupedCertificates[year].map((cert: any) => {
                                                         const isActive = cert.id === activeCertificateId
-                                                        const isExpired = new Date(cert.expirationDate) < new Date()
+                                                        const isExpired = new Date(cert.dataVencimento) < new Date()
 
                                                         return (
                                                             <div key={cert.id} className={`flex items-center justify-between p-3 border rounded-lg ${isExpired
@@ -368,11 +368,11 @@ export function EditClientModal({ client, userId }: EditClientModalProps) {
                                                                                 ? 'text-green-900'
                                                                                 : 'text-gray-700'
                                                                             }`}>
-                                                                            {cert.holderName}
+                                                                            {cert.nomeTitular}
                                                                         </span>
                                                                     </div>
                                                                     <p className={`text-xs ${isExpired ? 'text-red-600' : 'text-gray-500'}`}>
-                                                                        Vence em: {new Date(cert.expirationDate).toLocaleDateString('pt-BR')}
+                                                                        Vence em: {new Date(cert.dataVencimento).toLocaleDateString('pt-BR')}
                                                                     </p>
                                                                 </div>
                                                                 <div className="flex items-center gap-2">
@@ -390,7 +390,7 @@ export function EditClientModal({ client, userId }: EditClientModalProps) {
                                                                         className="h-8 w-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50"
                                                                         onClick={async () => {
                                                                             try {
-                                                                                const result = await getCertificateDownloadUrlAction(cert.fileKey)
+                                                                                const result = await getCertificateDownloadUrlAction(cert.chaveArquivo)
                                                                                 if (result.success && result.url) {
                                                                                     window.open(result.url, '_blank')
                                                                                 } else {

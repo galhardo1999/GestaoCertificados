@@ -9,13 +9,13 @@ import { useRouter } from 'next/navigation'
 interface CompanyRowProps {
     user: {
         id: string
-        name: string | null
+        nome: string | null
         email: string
         cnpj: string | null
-        createdAt: Date
+        criadoEm: Date
         _count: {
-            certificates: number
-            clients: number
+            certificados: number
+            clientes: number
         }
     }
 }
@@ -39,16 +39,16 @@ export function CompanyRow({ user }: CompanyRowProps) {
         >
             <TableCell className="font-mono text-xs">{user.id.slice(-6).toUpperCase()}</TableCell>
             <TableCell>
-                {format(new Date(user.createdAt), "dd/MM/yyyy", {
+                {format(new Date(user.criadoEm), "dd/MM/yyyy", {
                     locale: ptBR,
                 })}
             </TableCell>
             <TableCell className="font-medium">
-                {user.name}
+                {user.nome}
             </TableCell>
             <TableCell>{user.cnpj || '-'}</TableCell>
-            <TableCell className="text-center">{user._count.clients}</TableCell>
-            <TableCell className="text-center">{user._count.certificates}</TableCell>
+            <TableCell className="text-center">{user._count.clientes}</TableCell>
+            <TableCell className="text-center">{user._count.certificados}</TableCell>
             <TableCell className="text-right">
                 <div onClick={(e) => e.stopPropagation()}>
                     <UserActions user={user} />

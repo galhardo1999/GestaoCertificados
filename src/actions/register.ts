@@ -12,7 +12,18 @@ export interface RegisterResult {
 export async function registerUser(
     email: string,
     password: string,
-    name: string
+    name: string,
+    additionalData?: {
+        cnpj?: string
+        telefone1?: string
+        telefone2?: string
+        cep?: string
+        endereco?: string
+        numero?: string
+        bairro?: string
+        cidade?: string
+        estado?: string
+    }
 ): Promise<RegisterResult> {
     try {
         // Validate inputs
@@ -41,7 +52,7 @@ export async function registerUser(
         }
 
         // Check if user already exists
-        const existingUser = await prisma.user.findUnique({
+        const existingUser = await prisma.usuario.findUnique({
             where: { email },
         })
 
@@ -56,11 +67,21 @@ export async function registerUser(
         const hashedPassword = await bcrypt.hash(password, 10)
 
         // Create user
-        const user = await prisma.user.create({
+        const user = await prisma.usuario.create({
             data: {
                 email,
-                password: hashedPassword,
-                name,
+                senha: hashedPassword,
+                nome: name,
+                // Additional fields
+                cnpj: additionalData?.cnpj,
+                telefone1: additionalData?.telefone1,
+                telefone2: additionalData?.telefone2,
+                cep: additionalData?.cep,
+                endereco: additionalData?.endereco,
+                numero: additionalData?.numero,
+                bairro: additionalData?.bairro,
+                cidade: additionalData?.cidade,
+                estado: additionalData?.estado,
             },
         })
 

@@ -2,31 +2,31 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { SettingsForm } from '@/components/settings-form'
+import { SettingsForm } from '@/components/features/settings/settings-form'
 
 export default async function ConfiguracoesPage() {
     const session = await getServerSession(authOptions)
     const userId = session!.user.id
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.usuario.findUnique({
         where: { id: userId },
         select: {
-            name: true,
+            nome: true,
             email: true,
-            whatsappTemplate: true,
-            logoUrl: true,
+            templateWhatsapp: true,
+            urlLogo: true,
             cnpj: true,
-            phone1: true,
-            phone2: true,
-            masterUserId: true,
-            masterUser: {
+            telefone1: true,
+            telefone2: true,
+            usuarioMestreId: true,
+            usuarioMestre: {
                 select: {
-                    name: true,
-                    whatsappTemplate: true,
-                    logoUrl: true,
+                    nome: true,
+                    templateWhatsapp: true,
+                    urlLogo: true,
                     cnpj: true,
-                    phone1: true,
-                    phone2: true,
+                    telefone1: true,
+                    telefone2: true,
                 }
             }
         },
@@ -37,13 +37,13 @@ export default async function ConfiguracoesPage() {
     }
 
     const displayData = {
-        name: user.masterUser?.name ?? user.name,
+        name: user.usuarioMestre?.nome ?? user.nome,
         email: user.email,
-        whatsappTemplate: user.masterUser?.whatsappTemplate ?? user.whatsappTemplate,
-        logoUrl: user.masterUser?.logoUrl ?? user.logoUrl,
-        cnpj: user.masterUser?.cnpj ?? user.cnpj,
-        phone1: user.masterUser?.phone1 ?? user.phone1,
-        phone2: user.masterUser?.phone2 ?? user.phone2,
+        whatsappTemplate: user.usuarioMestre?.templateWhatsapp ?? user.templateWhatsapp,
+        logoUrl: user.usuarioMestre?.urlLogo ?? user.urlLogo,
+        cnpj: user.usuarioMestre?.cnpj ?? user.cnpj,
+        phone1: user.usuarioMestre?.telefone1 ?? user.telefone1,
+        phone2: user.usuarioMestre?.telefone2 ?? user.telefone2,
     }
 
     let logoUrl = displayData.logoUrl
@@ -52,7 +52,7 @@ export default async function ConfiguracoesPage() {
         logoUrl = await getSignedDownloadUrl(logoUrl)
     }
 
-    const isPrincipal = !user.masterUserId
+    const isPrincipal = !user.usuarioMestreId
 
     return (
         <div className="min-h-full bg-gradient-to-br from-blue-50 via-white to-purple-50">

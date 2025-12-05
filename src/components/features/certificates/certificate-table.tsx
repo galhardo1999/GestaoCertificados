@@ -10,13 +10,13 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { StatusBadge } from '@/components/status-badge'
+import { StatusBadge } from '@/components/shared/status-badge'
 import { CertificateWithDays } from '@/actions/get-certificates'
 import { deleteCertificate } from '@/actions/get-certificates'
 import { formatDateBR } from '@/lib/utils'
 import { Trash2, Download, Loader2 } from 'lucide-react'
 import { getSignedDownloadUrl } from '@/lib/s3'
-import { WhatsAppIcon } from '@/components/whatsapp-icon'
+import { WhatsAppIcon } from '@/components/shared/whatsapp-icon'
 
 interface CertificateTableProps {
     certificates: CertificateWithDays[]
@@ -29,14 +29,14 @@ export function CertificateTable({ certificates, onDelete, showAsClients = false
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const [downloadingId, setDownloadingId] = useState<string | null>(null)
 
-    const handleDelete = async (certificateId: string, userId: string) => {
+    const handleDelete = async (certificateId: string) => {
         if (!confirm('Tem certeza que deseja excluir este certificado?')) {
             return
         }
 
         setDeletingId(certificateId)
         try {
-            await deleteCertificate(certificateId, userId)
+            await deleteCertificate(certificateId)
             onDelete?.()
         } catch (error) {
             alert('Erro ao excluir certificado')
@@ -147,17 +147,20 @@ export function CertificateTable({ certificates, onDelete, showAsClients = false
                                     </TableCell>
                                     <TableCell>{formatDateBR(cert.expirationDate)}</TableCell>
                                     <TableCell>
-                                        {cert.client?.phone && (
+                                        <TableCell>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                className={cert.client?.phone
+                                                    ? "text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                    : "text-gray-300 hover:text-gray-400 hover:bg-gray-50"
+                                                }
                                                 onClick={() => handleWhatsApp(cert)}
-                                                title="Enviar mensagem no WhatsApp"
+                                                title={cert.client?.phone ? "Enviar mensagem no WhatsApp" : "Cliente sem telefone cadastrado"}
                                             >
                                                 <WhatsAppIcon className="h-5 w-5" />
                                             </Button>
-                                        )}
+                                        </TableCell>
                                     </TableCell>
                                 </>
                             ) : (

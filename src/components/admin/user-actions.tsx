@@ -38,7 +38,7 @@ import { useRouter } from 'next/navigation'
 interface UserActionsProps {
     user: {
         id: string
-        name: string | null
+        nome: string | null
         email: string
     }
     label?: string
@@ -49,7 +49,7 @@ export function UserActions({ user, label = 'Empresa', isMainUser = false }: Use
     const [openEdit, setOpenEdit] = useState(false)
     const [openDelete, setOpenDelete] = useState(false)
     const [loading, setLoading] = useState(false)
-    const [name, setName] = useState(user.name || '')
+    const [name, setName] = useState(user.nome || '')
     const [email, setEmail] = useState(user.email)
     const [password, setPassword] = useState('')
     const router = useRouter()

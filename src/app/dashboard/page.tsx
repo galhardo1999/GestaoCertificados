@@ -1,11 +1,11 @@
 import { getCertificates } from '@/actions/get-certificates'
 import { prisma } from '@/lib/prisma'
-import { CertificateTable } from '@/components/certificate-table'
+import { CertificateTable } from '@/components/features/certificates/certificate-table'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Shield, Clock, AlertTriangle } from 'lucide-react'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { LogoutButton } from '@/components/logout-button'
+import { LogoutButton } from '@/components/features/auth/logout-button'
 
 export default async function DashboardPage() {
     // Get authenticated user (auth check is in layout)
@@ -14,14 +14,14 @@ export default async function DashboardPage() {
 
     // Fetch user settings and certificates in parallel
     const [user, certificates] = await Promise.all([
-        prisma.user.findUnique({
+        prisma.usuario.findUnique({
             where: { id: userId },
-            select: { whatsappTemplate: true }
+            select: { templateWhatsapp: true }
         }),
         getCertificates(userId)
     ])
 
-    const whatsappTemplate = user?.whatsappTemplate || 'Olá {clientName}, seu certificado digital ({holderName}) vence em {expirationDate}. Entre em contato para renovar!'
+    const whatsappTemplate = user?.templateWhatsapp || 'Olá {clientName}, seu certificado digital ({holderName}) vence em {expirationDate}. Entre em contato para renovar!'
 
     // Calculate statistics
     const totalCertificates = certificates.length

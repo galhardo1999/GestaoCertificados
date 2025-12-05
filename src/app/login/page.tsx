@@ -71,7 +71,6 @@ export default function LoginPage() {
                                 {error}
                             </div>
                         )}
-
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
                             <Input
@@ -84,9 +83,10 @@ export default function LoginPage() {
                                 disabled={loading}
                             />
                         </div>
-
                         <div className="space-y-2">
-                            <Label htmlFor="password">Senha</Label>
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="password">Senha</Label>
+                            </div>
                             <Input
                                 id="password"
                                 type="password"
@@ -97,7 +97,6 @@ export default function LoginPage() {
                                 disabled={loading}
                             />
                         </div>
-
                         <Button
                             type="submit"
                             className="w-full"
@@ -112,8 +111,6 @@ export default function LoginPage() {
                                 'Entrar'
                             )}
                         </Button>
-
-
                     </form>
                 </CardContent>
             </Card>

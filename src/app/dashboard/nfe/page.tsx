@@ -1,26 +1,26 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { NFeConsultationForm } from '@/components/nfe-consultation-form'
+import { NFeConsultationForm } from '@/components/features/nfe/nfe-consultation-form'
 
 export default async function NFePage() {
     const session = await getServerSession(authOptions)
     const userId = session!.user.masterUserId || session!.user.id
 
     // Fetch clients that have certificates
-    const clients = await prisma.client.findMany({
+    const clients = await prisma.cliente.findMany({
         where: {
-            userId,
-            certificates: {
-                some: { status: 'ACTIVE' }
+            usuarioId: userId,
+            certificados: {
+                some: { status: 'ATIVO' }
             }
         },
         select: {
             id: true,
-            companyName: true,
+            nomeEmpresa: true,
             cnpj: true
         },
-        orderBy: { companyName: 'asc' }
+        orderBy: { nomeEmpresa: 'asc' }
     })
 
     return (

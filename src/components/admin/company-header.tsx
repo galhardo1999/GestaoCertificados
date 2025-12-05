@@ -5,9 +5,9 @@ import { ChevronLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export async function CompanyHeader({ companyId, activeTab }: { companyId: string, activeTab: 'info' | 'users' }) {
-    const company = await prisma.user.findUnique({
+    const company = await prisma.usuario.findUnique({
         where: { id: companyId },
-        select: { name: true }
+        select: { nome: true }
     })
 
     if (!company) {
@@ -23,7 +23,7 @@ export async function CompanyHeader({ companyId, activeTab }: { companyId: strin
                     </Link>
                 </Button>
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">{company.name}</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">{company.nome}</h1>
                     <p className="text-muted-foreground">
                         Gerencie os detalhes e usuários desta empresa.
                     </p>

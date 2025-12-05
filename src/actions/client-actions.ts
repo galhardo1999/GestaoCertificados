@@ -38,17 +38,17 @@ export async function createClient(
         }
 
         // Create client
-        const client = await prisma.client.create({
+        const client = await prisma.cliente.create({
             data: {
-                userId,
-                companyName,
+                usuarioId: userId,
+                nomeEmpresa: companyName,
                 cnpj,
-                phone: phone || null,
-                address: address || null,
-                number: number || null,
-                neighborhood: neighborhood || null,
-                city: city || null,
-                state: state || null,
+                telefone: phone || null,
+                endereco: address || null,
+                numero: number || null,
+                bairro: neighborhood || null,
+                cidade: city || null,
+                estado: state || null,
             },
         })
 
@@ -57,7 +57,7 @@ export async function createClient(
             // Validate file type
             if (!file.name.endsWith('.pfx') && !file.name.endsWith('.p12')) {
                 // Delete the client if certificate upload fails
-                await prisma.client.delete({ where: { id: client.id } })
+                await prisma.cliente.delete({ where: { id: client.id } })
                 return {
                     success: false,
                     message: 'Arquivo deve ser do tipo .pfx ou .p12',
@@ -70,7 +70,7 @@ export async function createClient(
 
             // Validate it's a valid PFX file
             if (!isPfxFile(fileBuffer)) {
-                await prisma.client.delete({ where: { id: client.id } })
+                await prisma.cliente.delete({ where: { id: client.id } })
                 return {
                     success: false,
                     message: 'Arquivo .pfx inválido ou corrompido',
@@ -89,15 +89,15 @@ export async function createClient(
             })
 
             // Create certificate linked to client
-            await prisma.certificate.create({
+            await prisma.certificado.create({
                 data: {
-                    userId,
-                    clientId: client.id,
-                    fileKey,
-                    holderName: metadata.holderName,
-                    expirationDate: metadata.expirationDate,
-                    status: 'ACTIVE',
-                    metadata: {
+                    usuarioId: userId,
+                    clienteId: client.id,
+                    chaveArquivo: fileKey,
+                    nomeTitular: metadata.holderName,
+                    dataVencimento: metadata.expirationDate,
+                    status: 'ATIVO',
+                    metadados: {
                         issuer: metadata.issuer,
                         serialNumber: metadata.serialNumber,
                         subject: metadata.subject,
@@ -117,7 +117,7 @@ export async function createClient(
         console.error('Error creating client:', error)
         return {
             success: false,
-            message: 'Erro ao criar cliente. Tente novamente.',
+            message: `Erro ao criar cliente. Tente novamente: ${(error as any).message}`,
         }
     }
 }
@@ -129,11 +129,11 @@ export async function getClients(
     limit: number = 25
 ) {
     try {
-        const where: any = { userId }
+        const where: any = { usuarioId: userId }
 
         if (search) {
             where.OR = [
-                { companyName: { contains: search, mode: 'insensitive' } },
+                { nomeEmpresa: { contains: search, mode: 'insensitive' } },
                 { cnpj: { contains: search, mode: 'insensitive' } },
             ]
         }
@@ -141,21 +141,21 @@ export async function getClients(
         const skip = (page - 1) * limit
 
         const [clients, total] = await Promise.all([
-            prisma.client.findMany({
+            prisma.cliente.findMany({
                 where,
                 include: {
-                    certificates: {
-                        orderBy: { expirationDate: 'desc' },
+                    certificados: {
+                        orderBy: { dataVencimento: 'desc' },
                     },
                     _count: {
-                        select: { certificates: true },
+                        select: { certificados: true },
                     },
                 },
-                orderBy: { createdAt: 'desc' },
+                orderBy: { criadoEm: 'desc' },
                 skip,
                 take: limit,
             }),
-            prisma.client.count({ where }),
+            prisma.cliente.count({ where }),
         ])
 
         return {
@@ -172,18 +172,18 @@ export async function getClients(
 export async function deleteClient(clientId: string) {
     try {
         // Get all certificates for this client to delete their S3 files
-        const certificates = await prisma.certificate.findMany({
-            where: { clientId },
-            select: { fileKey: true }
+        const certificates = await prisma.certificado.findMany({
+            where: { clienteId: clientId },
+            select: { chaveArquivo: true }
         })
 
         // Delete all certificate files from S3
         await Promise.all(
-            certificates.map(cert => deleteFileFromS3(cert.fileKey))
+            certificates.map(cert => deleteFileFromS3(cert.chaveArquivo))
         )
 
         // Delete client (cascade will delete certificates from DB)
-        await prisma.client.delete({
+        await prisma.cliente.delete({
             where: { id: clientId },
         })
 
@@ -206,17 +206,17 @@ export async function updateClient(clientId: string, data: {
     state?: string
 }) {
     try {
-        await prisma.client.update({
+        await prisma.cliente.update({
             where: { id: clientId },
             data: {
-                companyName: data.companyName,
+                nomeEmpresa: data.companyName,
                 cnpj: data.cnpj,
-                phone: data.phone || null,
-                address: data.address || null,
-                number: data.number || null,
-                neighborhood: data.neighborhood || null,
-                city: data.city || null,
-                state: data.state || null,
+                telefone: data.phone || null,
+                endereco: data.address || null,
+                numero: data.number || null,
+                bairro: data.neighborhood || null,
+                cidade: data.city || null,
+                estado: data.state || null,
             },
         })
 
@@ -267,15 +267,15 @@ export async function addCertificate(
         })
 
         // Create certificate linked to client
-        await prisma.certificate.create({
+        await prisma.certificado.create({
             data: {
-                userId,
-                clientId,
-                fileKey,
-                holderName: metadata.holderName,
-                expirationDate: metadata.expirationDate,
-                status: 'ACTIVE',
-                metadata: {
+                usuarioId: userId,
+                clienteId: clientId,
+                chaveArquivo: fileKey,
+                nomeTitular: metadata.holderName,
+                dataVencimento: metadata.expirationDate,
+                status: 'ATIVO',
+                metadados: {
                     issuer: metadata.issuer,
                     serialNumber: metadata.serialNumber,
                     subject: metadata.subject,
@@ -292,11 +292,20 @@ export async function addCertificate(
 }
 
 export async function deleteCertificate(certificateId: string) {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+        return { success: false, message: 'Não autorizado' }
+    }
+    const userId = session.user.id
+
     try {
         // Get certificate to retrieve fileKey before deleting
-        const certificate = await prisma.certificate.findUnique({
-            where: { id: certificateId },
-            select: { fileKey: true }
+        const certificate = await prisma.certificado.findFirst({
+            where: {
+                id: certificateId,
+                usuarioId: userId // Ensure ownership
+            },
+            select: { chaveArquivo: true }
         })
 
         if (!certificate) {
@@ -304,10 +313,10 @@ export async function deleteCertificate(certificateId: string) {
         }
 
         // Delete file from S3
-        await deleteFileFromS3(certificate.fileKey)
+        await deleteFileFromS3(certificate.chaveArquivo).catch(console.error)
 
         // Delete certificate from DB
-        await prisma.certificate.delete({
+        await prisma.certificado.delete({
             where: { id: certificateId },
         })
 
@@ -369,9 +378,9 @@ export async function processCertificateAndCreateClient(
 
         // 3. Create Client
         // Check if client already exists with this CNPJ for this user
-        const existingClient = await prisma.client.findFirst({
+        const existingClient = await prisma.cliente.findFirst({
             where: {
-                userId,
+                usuarioId: userId,
                 cnpj: metadata.cnpj
             }
         })
@@ -379,16 +388,17 @@ export async function processCertificateAndCreateClient(
         let clientId = existingClient?.id
 
         if (!existingClient) {
-            const newClient = await prisma.client.create({
+            const newClient = await prisma.cliente.create({
                 data: {
-                    userId,
-                    companyName: companyName,
+                    usuarioId: userId,
+                    nomeEmpresa: companyName,
                     cnpj: metadata.cnpj,
-                    address: addressData.success ? addressData.data?.address.street : null,
-                    number: addressData.success ? addressData.data?.address.number : null,
-                    neighborhood: addressData.success ? addressData.data?.address.district : null,
-                    city: addressData.success ? addressData.data?.address.city : null,
-                    state: addressData.success ? addressData.data?.address.state : null,
+                    endereco: addressData.success ? addressData.data?.address.street : null,
+                    numero: addressData.success ? addressData.data?.address.number : null,
+                    bairro: addressData.success ? addressData.data?.address.district : null,
+                    cidade: addressData.success ? addressData.data?.address.city : null,
+                    estado: addressData.success ? addressData.data?.address.state : null,
+                    telefone: addressData.success ? addressData.data?.phone : null,
                 }
             })
             clientId = newClient.id
@@ -406,15 +416,15 @@ export async function processCertificateAndCreateClient(
             userId,
         })
 
-        await prisma.certificate.create({
+        await prisma.certificado.create({
             data: {
-                userId,
-                clientId,
-                fileKey,
-                holderName: metadata.holderName,
-                expirationDate: metadata.expirationDate,
-                status: 'ACTIVE',
-                metadata: {
+                usuarioId: userId,
+                clienteId: clientId,
+                chaveArquivo: fileKey,
+                nomeTitular: metadata.holderName,
+                dataVencimento: metadata.expirationDate,
+                status: 'ATIVO',
+                metadados: {
                     issuer: metadata.issuer,
                     serialNumber: metadata.serialNumber,
                     subject: metadata.subject,
@@ -433,7 +443,7 @@ export async function processCertificateAndCreateClient(
         console.error('Error processing certificate:', error)
         return {
             success: false,
-            message: error instanceof Error ? error.message : 'Erro desconhecido ao processar'
+            message: error instanceof Error ? error.message : `Erro desconhecido: ${JSON.stringify(error)}`
         }
     }
 }

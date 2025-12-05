@@ -2,13 +2,13 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, Building2, Shield, Filter } from 'lucide-react'
-import { ClientCreationMenu } from '@/components/client-creation-menu'
+import { ClientCreationMenu } from '@/components/features/clients/client-creation-menu'
 import { getClients } from '@/actions/client-actions'
 import { Button } from '@/components/ui/button'
 import { calculateDaysRemaining } from '@/lib/utils'
-import { SearchInput } from '@/components/search-input'
-import { Pagination } from '@/components/pagination'
-import { ClientsTable } from '@/components/clients-table'
+import { SearchInput } from '@/components/shared/search-input'
+import { Pagination } from '@/components/shared/pagination'
+import { ClientsTable } from '@/components/features/clients/clients-table'
 
 export default async function ClientesPage({
     searchParams,
@@ -32,9 +32,10 @@ export default async function ClientesPage({
     const { clients, total, totalPages } = await getClients(userId, query, page, limit)
 
     // Calculate statistics
+    // Calculate statistics
     const totalClients = total
-    const clientsWithCertificates = clients.filter(c => c._count.certificates > 0).length
-    const totalCertificates = clients.reduce((sum, c) => sum + c._count.certificates, 0)
+    const clientsWithCertificates = clients.filter(c => c._count.certificados > 0).length
+    const totalCertificates = clients.reduce((sum, c) => sum + c._count.certificados, 0)
 
     // Flatten clients with their certificates for table view
     type CertificateRow = {
@@ -50,12 +51,12 @@ export default async function ClientesPage({
     }
 
     const certificateRows: CertificateRow[] = clients.flatMap(client => {
-        if (client.certificates.length === 0) {
+        if (client.certificados.length === 0) {
             return [{
                 clientId: client.id,
-                clientName: client.companyName,
+                clientName: client.nomeEmpresa,
                 cnpj: client.cnpj,
-                phone: client.phone,
+                phone: client.telefone,
                 certificateId: `no-cert-${client.id}`,
                 holderName: '-',
                 expirationDate: null,
@@ -64,16 +65,16 @@ export default async function ClientesPage({
             }] as CertificateRow[]
         }
 
-        return client.certificates.map(cert => ({
+        return client.certificados.map(cert => ({
             clientId: client.id,
-            clientName: client.companyName,
+            clientName: client.nomeEmpresa,
             cnpj: client.cnpj,
-            phone: client.phone,
+            phone: client.telefone,
             certificateId: cert.id,
-            holderName: cert.holderName,
-            expirationDate: cert.expirationDate,
+            holderName: cert.nomeTitular,
+            expirationDate: cert.dataVencimento,
             status: cert.status,
-            daysRemaining: calculateDaysRemaining(cert.expirationDate),
+            daysRemaining: calculateDaysRemaining(cert.dataVencimento),
         })) as CertificateRow[]
     })
 

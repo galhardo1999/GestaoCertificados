@@ -41,6 +41,7 @@ export function MultiClientUploadModal({ userId, onSuccess, open: externalOpen, 
     const open = isControlled ? externalOpen : internalOpen
     const [files, setFiles] = useState<FileStatus[]>([])
     const [processing, setProcessing] = useState(false)
+    const [isFinished, setIsFinished] = useState(false)
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
         const newFiles = acceptedFiles.map(file => ({
@@ -57,7 +58,7 @@ export function MultiClientUploadModal({ userId, onSuccess, open: externalOpen, 
             'application/x-pkcs12': ['.pfx', '.p12'],
         },
         onDrop,
-        disabled: processing
+        disabled: processing || isFinished
     })
 
     const removeFile = (index: number) => {
@@ -111,6 +112,7 @@ export function MultiClientUploadModal({ userId, onSuccess, open: externalOpen, 
         }
 
         setProcessing(false)
+        setIsFinished(true) // Switch to finished state
 
         const successCount = newFiles.filter(f => f.status === 'success').length
         if (successCount > 0) {
@@ -123,6 +125,7 @@ export function MultiClientUploadModal({ userId, onSuccess, open: externalOpen, 
     const resetModal = () => {
         setFiles([])
         setProcessing(false)
+        setIsFinished(false)
     }
 
     const handleOpenChange = (val: boolean) => {
@@ -134,6 +137,10 @@ export function MultiClientUploadModal({ userId, onSuccess, open: externalOpen, 
             }
             if (!val) resetModal()
         }
+    }
+
+    const handleFinish = () => {
+        handleOpenChange(false)
     }
 
     return (
@@ -148,38 +155,42 @@ export function MultiClientUploadModal({ userId, onSuccess, open: externalOpen, 
             )}
             <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Adicionar Múltiplos Clientes</DialogTitle>
+                    <DialogTitle>{isFinished ? 'Resultado do Processamento' : 'Adicionar Múltiplos Clientes'}</DialogTitle>
                     <DialogDescription>
-                        Faça upload de vários certificados para criar clientes em lote.
-                        Informe a senha individualmente para cada arquivo, se necessário.
+                        {isFinished
+                            ? 'Confira o resultado da importação dos clientes abaixo.'
+                            : 'Faça upload de vários certificados para criar clientes em lote. Informe a senha individualmente para cada arquivo, se necessário.'
+                        }
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4 py-4">
 
-                    {/* Dropzone */}
-                    <div
-                        {...getRootProps()}
-                        className={`
-                            border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-                            ${isDragActive ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-primary'}
-                            ${processing ? 'opacity-50 cursor-not-allowed' : ''}
-                        `}
-                    >
-                        <input {...getInputProps()} />
-                        <div className="space-y-2">
-                            <Upload className="mx-auto h-10 w-10 text-gray-400" />
-                            <p className="text-sm text-gray-600">
-                                Arraste arquivos .pfx ou .p12 aqui
-                            </p>
-                            <p className="text-xs text-gray-500">ou clique para selecionar</p>
+                    {/* Dropzone - Only show if not finished */}
+                    {!isFinished && (
+                        <div
+                            {...getRootProps()}
+                            className={`
+                                border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+                                ${isDragActive ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-primary'}
+                                ${processing ? 'opacity-50 cursor-not-allowed' : ''}
+                            `}
+                        >
+                            <input {...getInputProps()} />
+                            <div className="space-y-2">
+                                <Upload className="mx-auto h-10 w-10 text-gray-400" />
+                                <p className="text-sm text-gray-600">
+                                    Arraste arquivos .pfx ou .p12 aqui
+                                </p>
+                                <p className="text-xs text-gray-500">ou clique para selecionar</p>
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* File List */}
                     {files.length > 0 && (
                         <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-                            <Label>Arquivos Selecionados ({files.length})</Label>
+                            <Label>{isFinished ? 'Resumo' : `Arquivos Selecionados (${files.length})`}</Label>
                             {files.map((item, index) => (
                                 <div
                                     key={index}
@@ -195,9 +206,11 @@ export function MultiClientUploadModal({ userId, onSuccess, open: externalOpen, 
                                             <div className="flex items-center gap-3 overflow-hidden flex-1">
                                                 <FileText className="h-5 w-5 text-gray-500 flex-shrink-0" />
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="text-sm font-medium truncate">{item.file.name}</p>
+                                                    <p className="text-sm font-medium truncate">
+                                                        {item.clientName || item.file.name}
+                                                    </p>
                                                     <p className="text-xs text-gray-500">
-                                                        {item.status === 'success' && item.clientName ? item.clientName :
+                                                        {item.status === 'success' ? 'Importado com sucesso' :
                                                             item.status === 'error' ? item.message :
                                                                 (item.file.size / 1024).toFixed(2) + ' KB'}
                                                     </p>
@@ -214,7 +227,7 @@ export function MultiClientUploadModal({ userId, onSuccess, open: externalOpen, 
                                                 {item.status === 'error' && (
                                                     <AlertCircle className="h-4 w-4 text-red-500" />
                                                 )}
-                                                {item.status === 'pending' && !processing && (
+                                                {item.status === 'pending' && !processing && !isFinished && (
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
@@ -230,7 +243,7 @@ export function MultiClientUploadModal({ userId, onSuccess, open: externalOpen, 
                                             </div>
                                         </div>
 
-                                        {item.status === 'pending' && (
+                                        {item.status === 'pending' && !isFinished && (
                                             <div className="pl-8 relative">
                                                 <Input
                                                     type={item.showPassword ? "text" : "password"}
@@ -273,29 +286,40 @@ export function MultiClientUploadModal({ userId, onSuccess, open: externalOpen, 
                     )}
 
                     <div className="flex gap-2 pt-4">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => handleOpenChange(false)}
-                            disabled={processing}
-                            className="flex-1"
-                        >
-                            Fechar
-                        </Button>
-                        <Button
-                            onClick={processFiles}
-                            disabled={processing || files.length === 0 || files.every(f => f.status === 'success')}
-                            className="flex-1"
-                        >
-                            {processing ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Processando...
-                                </>
-                            ) : (
-                                'Processar Clientes'
-                            )}
-                        </Button>
+                        {isFinished ? (
+                            <Button
+                                onClick={handleFinish}
+                                className="w-full bg-green-600 hover:bg-green-700"
+                            >
+                                Concluir
+                            </Button>
+                        ) : (
+                            <>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => handleOpenChange(false)}
+                                    disabled={processing}
+                                    className="flex-1"
+                                >
+                                    Cancelar
+                                </Button>
+                                <Button
+                                    onClick={processFiles}
+                                    disabled={processing || files.length === 0} // Allow verifying errors if needed, but here we just proceed
+                                    className="flex-1"
+                                >
+                                    {processing ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Processando...
+                                        </>
+                                    ) : (
+                                        'Processar Clientes'
+                                    )}
+                                </Button>
+                            </>
+                        )}
                     </div>
                 </div>
             </DialogContent>

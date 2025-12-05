@@ -3,18 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, FileCheck, AlertTriangle, CheckCircle2 } from 'lucide-react'
 
 async function getStats() {
-    const totalUsers = await prisma.user.count({
-        where: { role: 'USER' }
+    const totalUsers = await prisma.usuario.count({
+        where: { funcao: 'USUARIO' }
     })
 
-    const totalCertificates = await prisma.certificate.count()
+    const totalCertificates = await prisma.certificado.count()
 
-    const activeCertificates = await prisma.certificate.count({
-        where: { status: 'ACTIVE' }
+    const activeCertificates = await prisma.certificado.count({
+        where: { status: 'ATIVO' }
     })
 
-    const expiredCertificates = await prisma.certificate.count({
-        where: { status: 'EXPIRED' }
+    const expiredCertificates = await prisma.certificado.count({
+        where: { status: 'EXPIRADO' }
     })
 
     return {

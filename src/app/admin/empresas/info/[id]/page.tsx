@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { CompanyHeader } from '@/components/admin/company-header'
 
 export default async function CompanyInfoPage({ params }: { params: { id: string } }) {
-    const company = await prisma.user.findUnique({
+    const company = await prisma.usuario.findUnique({
         where: { id: params.id }
     })
 
@@ -23,7 +23,7 @@ export default async function CompanyInfoPage({ params }: { params: { id: string
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label>Nome da Empresa</Label>
-                            <Input value={company.name || ''} readOnly />
+                            <Input value={company.nome || ''} readOnly />
                         </div>
                         <div className="space-y-2">
                             <Label>CNPJ</Label>
@@ -31,15 +31,15 @@ export default async function CompanyInfoPage({ params }: { params: { id: string
                         </div>
                         <div className="space-y-2">
                             <Label>Telefone 1</Label>
-                            <Input value={company.phone1 || ''} readOnly />
+                            <Input value={company.telefone1 || ''} readOnly />
                         </div>
                         <div className="space-y-2">
                             <Label>Telefone 2</Label>
-                            <Input value={company.phone2 || ''} readOnly />
+                            <Input value={company.telefone2 || ''} readOnly />
                         </div>
                         <div className="space-y-2">
                             <Label>Data de Cadastro</Label>
-                            <Input value={company.createdAt.toLocaleDateString('pt-BR')} readOnly />
+                            <Input value={company.criadoEm.toLocaleDateString('pt-BR')} readOnly />
                         </div>
                     </div>
 
@@ -48,27 +48,27 @@ export default async function CompanyInfoPage({ params }: { params: { id: string
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label>CEP</Label>
-                                <Input value={company.zipCode || ''} readOnly />
+                                <Input value={company.cep || ''} readOnly />
                             </div>
                             <div className="space-y-2">
                                 <Label>Rua</Label>
-                                <Input value={company.address || ''} readOnly />
+                                <Input value={company.endereco || ''} readOnly />
                             </div>
                             <div className="space-y-2">
                                 <Label>Número</Label>
-                                <Input value={company.number || ''} readOnly />
+                                <Input value={company.numero || ''} readOnly />
                             </div>
                             <div className="space-y-2">
                                 <Label>Bairro</Label>
-                                <Input value={company.neighborhood || ''} readOnly />
+                                <Input value={company.bairro || ''} readOnly />
                             </div>
                             <div className="space-y-2">
                                 <Label>Cidade</Label>
-                                <Input value={company.city || ''} readOnly />
+                                <Input value={company.cidade || ''} readOnly />
                             </div>
                             <div className="space-y-2">
                                 <Label>Estado (UF)</Label>
-                                <Input value={company.state || ''} readOnly />
+                                <Input value={company.estado || ''} readOnly />
                             </div>
                         </div>
                     </div>

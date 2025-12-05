@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { AdminSidebar } from '@/components/admin-sidebar'
+import { AdminSidebar } from '@/components/layout/admin-sidebar'
 
 export default async function AdminLayout({
     children,

@@ -20,21 +20,21 @@ export async function getPlans(
 
     if (search) {
         where.OR = [
-            { name: { contains: search, mode: 'insensitive' } },
-            { description: { contains: search, mode: 'insensitive' } }
+            { nome: { contains: search, mode: 'insensitive' } },
+            { descricao: { contains: search, mode: 'insensitive' } }
         ]
     }
 
     const skip = (page - 1) * limit
 
     const [plans, total] = await Promise.all([
-        prisma.plan.findMany({
+        prisma.plano.findMany({
             where,
-            orderBy: { code: 'desc' },
+            orderBy: { codigo: 'desc' },
             skip,
             take: limit
         }),
-        prisma.plan.count({ where })
+        prisma.plano.count({ where })
     ])
 
     return {
@@ -58,15 +58,15 @@ export async function createPlan(data: {
 
     try {
         // Find the last created plan to determine the next code
-        const lastPlan = await prisma.plan.findFirst({
+        const lastPlan = await prisma.plano.findFirst({
             orderBy: {
-                createdAt: 'desc'
+                criadoEm: 'desc'
             }
         })
 
         let nextCode = '01'
         if (lastPlan) {
-            const lastCodeInt = parseInt(lastPlan.code)
+            const lastCodeInt = parseInt(lastPlan.codigo)
             if (!isNaN(lastCodeInt)) {
                 nextCode = (lastCodeInt + 1).toString().padStart(2, '0')
             } else {
@@ -80,12 +80,12 @@ export async function createPlan(data: {
                 // Simple approach:
                 nextCode = '01' // Fallback
                 // If we want to be robust against non-numeric codes existing:
-                const allPlans = await prisma.plan.findMany({
-                    select: { code: true }
+                const allPlans = await prisma.plano.findMany({
+                    select: { codigo: true }
                 })
                 let maxCode = 0
                 for (const p of allPlans) {
-                    const c = parseInt(p.code)
+                    const c = parseInt(p.codigo)
                     if (!isNaN(c) && c > maxCode) {
                         maxCode = c
                     }
@@ -97,7 +97,7 @@ export async function createPlan(data: {
         // Ensure uniqueness just in case (though unlikely with the max logic)
         let isUnique = false
         while (!isUnique) {
-            const existing = await prisma.plan.findUnique({ where: { code: nextCode } })
+            const existing = await prisma.plano.findUnique({ where: { codigo: nextCode } })
             if (existing) {
                 const c = parseInt(nextCode)
                 nextCode = (c + 1).toString().padStart(2, '0')
@@ -106,13 +106,13 @@ export async function createPlan(data: {
             }
         }
 
-        await prisma.plan.create({
+        await prisma.plano.create({
             data: {
-                name: data.name,
-                code: nextCode,
-                price: data.price,
-                description: data.description,
-                active: data.active ?? true
+                nome: data.name,
+                codigo: nextCode,
+                preco: data.price,
+                descricao: data.description,
+                ativo: data.active ?? true
             }
         })
         revalidatePath('/admin/planos')
@@ -138,8 +138,8 @@ export async function updatePlan(id: string, data: {
 
     try {
         if (data.code) {
-            const existingPlan = await prisma.plan.findUnique({
-                where: { code: data.code }
+            const existingPlan = await prisma.plano.findUnique({
+                where: { codigo: data.code }
             })
 
             if (existingPlan && existingPlan.id !== id) {
@@ -147,14 +147,14 @@ export async function updatePlan(id: string, data: {
             }
         }
 
-        await prisma.plan.update({
+        await prisma.plano.update({
             where: { id },
             data: {
-                name: data.name,
-                code: data.code,
-                price: data.price,
-                description: data.description,
-                active: data.active
+                nome: data.name,
+                codigo: data.code,
+                preco: data.price,
+                descricao: data.description,
+                ativo: data.active
             }
         })
         revalidatePath('/admin/planos')
@@ -173,7 +173,7 @@ export async function deletePlan(id: string) {
     }
 
     try {
-        await prisma.plan.delete({
+        await prisma.plano.delete({
             where: { id }
         })
         revalidatePath('/admin/planos')

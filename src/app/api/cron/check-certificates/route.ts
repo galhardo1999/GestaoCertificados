@@ -28,12 +28,12 @@ export async function GET(request: NextRequest) {
         console.log('[CRON] Starting certificate expiration check...')
 
         // Get all active certificates
-        const certificates = await prisma.certificate.findMany({
+        const certificates = await prisma.certificado.findMany({
             where: {
-                status: 'ACTIVE',
+                status: 'ATIVO',
             },
             include: {
-                user: true,
+                usuario: true,
             },
         })
 
@@ -43,18 +43,18 @@ export async function GET(request: NextRequest) {
         let certificatesExpired = 0
 
         for (const certificate of certificates) {
-            const daysRemaining = calculateDaysRemaining(certificate.expirationDate)
-            const formattedDate = formatDateBR(certificate.expirationDate)
+            const daysRemaining = calculateDaysRemaining(certificate.dataVencimento)
+            const formattedDate = formatDateBR(certificate.dataVencimento)
 
             console.log(
-                `[CRON] Certificate ${certificate.id} (${certificate.holderName}): ${daysRemaining} days remaining`
+                `[CRON] Certificate ${certificate.id} (${certificate.nomeTitular}): ${daysRemaining} days remaining`
             )
 
             // Mark as expired if past expiration
             if (daysRemaining < 0) {
-                await prisma.certificate.update({
+                await prisma.certificado.update({
                     where: { id: certificate.id },
-                    data: { status: 'EXPIRED' },
+                    data: { status: 'EXPIRADO' },
                 })
                 certificatesExpired++
                 console.log(`[CRON] Marked certificate ${certificate.id} as EXPIRED`)
@@ -63,20 +63,20 @@ export async function GET(request: NextRequest) {
 
             // Check notification thresholds
             let shouldNotify = false
-            let notificationType: 'PLANNING_45_DAYS' | 'URGENCY_15_DAYS' | 'CRITICAL_0_DAYS' | null = null
+            let notificationType: 'PLANEJAMENTO_45_DIAS' | 'URGENCIA_15_DIAS' | 'CRITICO_0_DIAS' | null = null
             let emailTemplate = ''
 
             if (daysRemaining === 45) {
-                notificationType = 'PLANNING_45_DAYS'
-                emailTemplate = get45DayAlertTemplate(certificate.holderName, formattedDate)
+                notificationType = 'PLANEJAMENTO_45_DIAS'
+                emailTemplate = get45DayAlertTemplate(certificate.nomeTitular, formattedDate)
                 shouldNotify = true
             } else if (daysRemaining === 15) {
-                notificationType = 'URGENCY_15_DAYS'
-                emailTemplate = get15DayAlertTemplate(certificate.holderName, formattedDate)
+                notificationType = 'URGENCIA_15_DIAS'
+                emailTemplate = get15DayAlertTemplate(certificate.nomeTitular, formattedDate)
                 shouldNotify = true
             } else if (daysRemaining === 0) {
-                notificationType = 'CRITICAL_0_DAYS'
-                emailTemplate = get0DayAlertTemplate(certificate.holderName, formattedDate)
+                notificationType = 'CRITICO_0_DIAS'
+                emailTemplate = get0DayAlertTemplate(certificate.nomeTitular, formattedDate)
                 shouldNotify = true
             }
 
@@ -85,11 +85,11 @@ export async function GET(request: NextRequest) {
                 const today = new Date()
                 today.setHours(0, 0, 0, 0)
 
-                const existingLog = await prisma.notificationLog.findFirst({
+                const existingLog = await prisma.logNotificacao.findFirst({
                     where: {
-                        certificateId: certificate.id,
-                        notificationType,
-                        sentAt: {
+                        certificadoId: certificate.id,
+                        tipoNotificacao: notificationType,
+                        enviadoEm: {
                             gte: today,
                         },
                     },
@@ -105,16 +105,16 @@ export async function GET(request: NextRequest) {
                 // Send email notification
                 try {
                     await sendEmail({
-                        to: certificate.user.email,
-                        subject: `⚠️ Alerta: Certificado Digital - ${certificate.holderName}`,
+                        to: certificate.usuario.email,
+                        subject: `⚠️ Alerta: Certificado Digital - ${certificate.nomeTitular}`,
                         html: emailTemplate,
                     })
 
                     // Log the notification
-                    await prisma.notificationLog.create({
+                    await prisma.logNotificacao.create({
                         data: {
-                            certificateId: certificate.id,
-                            notificationType,
+                            certificadoId: certificate.id,
+                            tipoNotificacao: notificationType,
                         },
                     })
 
@@ -126,8 +126,8 @@ export async function GET(request: NextRequest) {
                     // Send admin notification for critical certificates
                     if (daysRemaining === 0) {
                         await sendAdminNotification(
-                            certificate.holderName,
-                            certificate.user.email,
+                            certificate.nomeTitular,
+                            certificate.usuario.email,
                             formattedDate
                         )
                         console.log(`[CRON] Sent admin notification for certificate ${certificate.id}`)

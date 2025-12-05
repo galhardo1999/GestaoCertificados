@@ -70,14 +70,14 @@ export async function uploadCertificate(
         })
 
         // Save certificate to database
-        const certificate = await prisma.certificate.create({
+        const certificate = await prisma.certificado.create({
             data: {
-                userId,
-                fileKey,
-                holderName: metadata.holderName,
-                expirationDate: metadata.expirationDate,
-                status: 'ACTIVE',
-                metadata: {
+                usuarioId: userId,
+                chaveArquivo: fileKey,
+                nomeTitular: metadata.holderName,
+                dataVencimento: metadata.expirationDate,
+                status: 'ATIVO',
+                metadados: {
                     issuer: metadata.issuer,
                     serialNumber: metadata.serialNumber,
                     subject: metadata.subject,
@@ -93,8 +93,8 @@ export async function uploadCertificate(
             message: 'Certificado enviado com sucesso!',
             certificate: {
                 id: certificate.id,
-                holderName: certificate.holderName,
-                expirationDate: certificate.expirationDate,
+                holderName: certificate.nomeTitular,
+                expirationDate: certificate.dataVencimento,
             },
         }
     } catch (error) {

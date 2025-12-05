@@ -15,7 +15,7 @@ export async function addTeamMember(companyId: string, data: { name: string; ema
 
     try {
         // Check if email exists
-        const existingUser = await prisma.user.findUnique({
+        const existingUser = await prisma.usuario.findUnique({
             where: { email: data.email }
         })
 
@@ -26,13 +26,13 @@ export async function addTeamMember(companyId: string, data: { name: string; ema
         const hashedPassword = await bcrypt.hash(data.password, 10)
 
         // Create user linked to company
-        await prisma.user.create({
+        await prisma.usuario.create({
             data: {
-                name: data.name,
+                nome: data.name,
                 email: data.email,
-                password: hashedPassword,
-                role: 'USER',
-                masterUserId: companyId
+                senha: hashedPassword,
+                funcao: 'USUARIO',
+                usuarioMestreId: companyId
             }
         })
 
@@ -51,13 +51,13 @@ export async function getTeamMembers(companyId: string) {
         throw new Error('Unauthorized')
     }
 
-    return await prisma.user.findMany({
+    return await prisma.usuario.findMany({
         where: {
             OR: [
-                { masterUserId: companyId },
+                { usuarioMestreId: companyId },
                 { id: companyId }
             ]
         },
-        orderBy: { createdAt: 'desc' }
+        orderBy: { criadoEm: 'desc' }
     })
 }

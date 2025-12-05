@@ -1,5 +1,5 @@
 import { getTeamMembers } from '@/actions/team-actions'
-import { AddTeamMemberModal } from '@/components/add-team-member-modal'
+import { AddTeamMemberModal } from '@/components/features/team/add-team-member-modal'
 import {
     Table,
     TableBody,
@@ -40,7 +40,7 @@ export default async function CompanyUsersPage({ params }: { params: { id: strin
                             {users.map((user) => (
                                 <TableRow key={user.id}>
                                     <TableCell className="font-medium">
-                                        {user.name}
+                                        {user.nome}
                                         {user.id === params.id && (
                                             <span className="ml-2 inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80">
                                                 Principal
@@ -49,7 +49,7 @@ export default async function CompanyUsersPage({ params }: { params: { id: strin
                                     </TableCell>
                                     <TableCell>{user.email}</TableCell>
                                     <TableCell>
-                                        {format(user.createdAt, "d 'de' MMMM 'de' yyyy", {
+                                        {format(user.criadoEm, "d 'de' MMMM 'de' yyyy", {
                                             locale: ptBR,
                                         })}
                                     </TableCell>

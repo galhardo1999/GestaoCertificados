@@ -33,3 +33,34 @@ export function getCertificateStatus(expirationDate: Date | string): 'valid' | '
   if (days <= 30) return 'warning'
   return 'valid'
 }
+
+export function formatCNPJ(cnpj: string): string {
+  if (!cnpj) return ''
+  const numbers = cnpj.replace(/\D/g, '')
+  if (numbers.length !== 14) return cnpj
+  return numbers.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5')
+}
+
+export function formatPhone(phone: string): string {
+  if (!phone) return ''
+  const numbers = phone.replace(/\D/g, '')
+
+  if (numbers.length === 11) {
+    return numbers.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3')
+  }
+
+  if (numbers.length === 10) {
+    return numbers.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3')
+  }
+
+  return phone
+}
+
+export function formatCEP(cep: string): string {
+  if (!cep) return ''
+  const numbers = cep.replace(/\D/g, '')
+  if (numbers.length === 8) {
+    return numbers.replace(/^(\d{5})(\d{3})$/, '$1-$2')
+  }
+  return cep
+}

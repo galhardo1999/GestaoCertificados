@@ -7,7 +7,7 @@ import { Download, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { getCertificateDownloadUrlAction } from '@/actions/client-actions'
 import { useState } from 'react'
-import { calculateDaysRemaining } from '@/lib/utils'
+import { calculateDaysRemaining, formatCNPJ, formatPhone } from '@/lib/utils'
 
 interface ViewClientModalProps {
     client: any
@@ -34,11 +34,11 @@ export function ViewClientModal({ client, open, onOpenChange }: ViewClientModalP
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="text-sm font-medium text-gray-700">Nome da Empresa</label>
-                                <p className="mt-1 text-sm text-gray-900">{client.companyName}</p>
+                                <p className="mt-1 text-sm text-gray-900">{client.nomeEmpresa}</p>
                             </div>
                             <div>
                                 <label className="text-sm font-medium text-gray-700">CNPJ</label>
-                                <p className="mt-1 text-sm text-gray-900">{client.cnpj}</p>
+                                <p className="mt-1 text-sm text-gray-900">{formatCNPJ(client.cnpj)}</p>
                             </div>
                             <div>
                                 <label className="text-sm font-medium text-gray-700">Email</label>
@@ -46,7 +46,7 @@ export function ViewClientModal({ client, open, onOpenChange }: ViewClientModalP
                             </div>
                             <div>
                                 <label className="text-sm font-medium text-gray-700">Telefone</label>
-                                <p className="mt-1 text-sm text-gray-900">{client.phone || '-'}</p>
+                                <p className="mt-1 text-sm text-gray-900">{formatPhone(client.telefone) || '-'}</p>
                             </div>
                         </div>
 
@@ -56,38 +56,38 @@ export function ViewClientModal({ client, open, onOpenChange }: ViewClientModalP
                                 <div className="col-span-2">
                                     <label className="text-sm font-medium text-gray-700">Logradouro</label>
                                     <p className="mt-1 text-sm text-gray-900">
-                                        {client.address ? `${client.address}, ${client.number || 'S/N'}` : '-'}
+                                        {client.endereco ? `${client.endereco}, ${client.numero || 'S/N'}` : '-'}
                                     </p>
                                 </div>
                                 <div>
                                     <label className="text-sm font-medium text-gray-700">Bairro</label>
-                                    <p className="mt-1 text-sm text-gray-900">{client.neighborhood || '-'}</p>
+                                    <p className="mt-1 text-sm text-gray-900">{client.bairro || '-'}</p>
                                 </div>
                                 <div>
                                     <label className="text-sm font-medium text-gray-700">Cidade/UF</label>
                                     <p className="mt-1 text-sm text-gray-900">
-                                        {client.city ? `${client.city}/${client.state || ''}` : '-'}
+                                        {client.cidade ? `${client.cidade}/${client.estado || ''}` : '-'}
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        {client.description && (
+                        {client.descricao && (
                             <div className="pt-4 border-t">
                                 <label className="text-sm font-medium text-gray-700">Descrição</label>
-                                <p className="mt-1 text-sm text-gray-900">{client.description}</p>
+                                <p className="mt-1 text-sm text-gray-900">{client.descricao}</p>
                             </div>
                         )}
                     </TabsContent>
 
                     {/* Certificates Tab */}
                     <TabsContent value="certificates" className="space-y-4 mt-6">
-                        {client.certificates && client.certificates.length > 0 ? (
+                        {client.certificados && client.certificados.length > 0 ? (
                             <div className="space-y-6">
                                 {(() => {
                                     // Sort certificates by expiration date descending
-                                    const sortedCertificates = [...client.certificates].sort((a, b) =>
-                                        new Date(b.expirationDate).getTime() - new Date(a.expirationDate).getTime()
+                                    const sortedCertificates = [...client.certificados].sort((a, b) =>
+                                        new Date(b.dataVencimento).getTime() - new Date(a.dataVencimento).getTime()
                                     )
 
                                     // The first one is the "Active" one (longest validity)
@@ -95,7 +95,7 @@ export function ViewClientModal({ client, open, onOpenChange }: ViewClientModalP
 
                                     // Group by year
                                     const groupedCertificates = sortedCertificates.reduce((acc, cert) => {
-                                        const year = new Date(cert.expirationDate).getFullYear()
+                                        const year = new Date(cert.dataVencimento).getFullYear()
                                         if (!acc[year]) acc[year] = []
                                         acc[year].push(cert)
                                         return acc
@@ -110,7 +110,7 @@ export function ViewClientModal({ client, open, onOpenChange }: ViewClientModalP
                                             <div className="space-y-3">
                                                 {groupedCertificates[year].map((cert: any) => {
                                                     const isActive = cert.id === activeCertificateId
-                                                    const isExpired = new Date(cert.expirationDate) < new Date()
+                                                    const isExpired = new Date(cert.dataVencimento) < new Date()
 
                                                     return (
                                                         <div key={cert.id} className={`flex items-center justify-between p-3 border rounded-lg ${isExpired
@@ -133,11 +133,11 @@ export function ViewClientModal({ client, open, onOpenChange }: ViewClientModalP
                                                                             ? 'text-green-900'
                                                                             : 'text-gray-700'
                                                                         }`}>
-                                                                        {cert.holderName}
+                                                                        {cert.nomeTitular}
                                                                     </span>
                                                                 </div>
                                                                 <p className={`text-xs ${isExpired ? 'text-red-600' : 'text-gray-500'}`}>
-                                                                    Vence em: {new Date(cert.expirationDate).toLocaleDateString('pt-BR')}
+                                                                    Vence em: {new Date(cert.dataVencimento).toLocaleDateString('pt-BR')}
                                                                 </p>
                                                             </div>
                                                             <div className="flex items-center gap-2">
@@ -155,7 +155,7 @@ export function ViewClientModal({ client, open, onOpenChange }: ViewClientModalP
                                                                     className="h-8 w-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50"
                                                                     onClick={async () => {
                                                                         try {
-                                                                            const result = await getCertificateDownloadUrlAction(cert.fileKey)
+                                                                            const result = await getCertificateDownloadUrlAction(cert.chaveArquivo)
                                                                             if (result.success && result.url) {
                                                                                 window.open(result.url, '_blank')
                                                                             } else {
