@@ -2,8 +2,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, Building2, Shield, Filter } from 'lucide-react'
-import { CreateClientModal } from '@/components/create-client-modal'
-import { MultiClientUploadModal } from '@/components/multi-client-upload-modal'
+import { ClientCreationMenu } from '@/components/client-creation-menu'
 import { getClients } from '@/actions/client-actions'
 import { Button } from '@/components/ui/button'
 import { calculateDaysRemaining } from '@/lib/utils'
@@ -117,8 +116,7 @@ export default async function ClientesPage({
                         </p>
                     </div>
                     <div className="flex items-center gap-4">
-                        <MultiClientUploadModal userId={userId} />
-                        <CreateClientModal userId={userId} />
+                        <ClientCreationMenu userId={userId} />
                     </div>
                 </div>
 
@@ -177,7 +175,7 @@ export default async function ClientesPage({
                             <p className="text-sm text-gray-500 mb-6 text-center max-w-md">
                                 Comece adicionando clientes e seus certificados digitais
                             </p>
-                            <CreateClientModal userId={userId} />
+                            <ClientCreationMenu userId={userId} />
                         </CardContent>
                     </Card>
                 ) : (

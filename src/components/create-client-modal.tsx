@@ -21,10 +21,15 @@ import { extractCertificateMetadata } from '@/actions/parse-certificate'
 interface CreateClientModalProps {
     userId: string
     onSuccess?: () => void
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
 }
 
-export function CreateClientModal({ userId, onSuccess }: CreateClientModalProps) {
-    const [open, setOpen] = useState(false)
+export function CreateClientModal({ userId, onSuccess, open: externalOpen, onOpenChange }: CreateClientModalProps) {
+    const [internalOpen, setInternalOpen] = useState(false)
+    const isControlled = externalOpen !== undefined
+    const open = isControlled ? externalOpen : internalOpen
+    const setOpen = isControlled ? onOpenChange! : setInternalOpen
     const [companyName, setCompanyName] = useState('')
     const [cnpj, setCnpj] = useState('')
     const [phone, setPhone] = useState('')
@@ -184,12 +189,14 @@ export function CreateClientModal({ userId, onSuccess }: CreateClientModalProps)
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button>
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Novo Cliente
-                </Button>
-            </DialogTrigger>
+            {!isControlled && (
+                <DialogTrigger asChild>
+                    <Button>
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Novo Cliente
+                    </Button>
+                </DialogTrigger>
+            )}
             <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Adicionar Novo Cliente</DialogTitle>

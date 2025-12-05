@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Users, Upload, X, FileText, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
+import { Users, Upload, X, FileText, CheckCircle2, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import { toast } from 'sonner'
 import { processCertificateAndCreateClient } from '@/actions/client-actions'
@@ -21,6 +21,8 @@ import { processCertificateAndCreateClient } from '@/actions/client-actions'
 interface MultiClientUploadModalProps {
     userId: string
     onSuccess?: () => void
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
 }
 
 interface FileStatus {
@@ -29,11 +31,14 @@ interface FileStatus {
     message?: string
     clientName?: string
     password?: string
+    showPassword?: boolean
 }
 
-export function MultiClientUploadModal({ userId, onSuccess }: MultiClientUploadModalProps) {
+export function MultiClientUploadModal({ userId, onSuccess, open: externalOpen, onOpenChange }: MultiClientUploadModalProps) {
     const router = useRouter()
-    const [open, setOpen] = useState(false)
+    const [internalOpen, setInternalOpen] = useState(false)
+    const isControlled = externalOpen !== undefined
+    const open = isControlled ? externalOpen : internalOpen
     const [files, setFiles] = useState<FileStatus[]>([])
     const [processing, setProcessing] = useState(false)
 
@@ -41,7 +46,8 @@ export function MultiClientUploadModal({ userId, onSuccess }: MultiClientUploadM
         const newFiles = acceptedFiles.map(file => ({
             file,
             status: 'pending' as const,
-            password: ''
+            password: '',
+            showPassword: false
         }))
         setFiles(prev => [...prev, ...newFiles])
     }, [])
@@ -119,19 +125,27 @@ export function MultiClientUploadModal({ userId, onSuccess }: MultiClientUploadM
         setProcessing(false)
     }
 
-    return (
-        <Dialog open={open} onOpenChange={(val) => {
-            if (!processing) {
-                setOpen(val)
-                if (!val) resetModal()
+    const handleOpenChange = (val: boolean) => {
+        if (!processing) {
+            if (isControlled) {
+                onOpenChange?.(val)
+            } else {
+                setInternalOpen(val)
             }
-        }}>
-            <DialogTrigger asChild>
-                <Button variant="outline">
-                    <Users className="mr-2 h-4 w-4" />
-                    Múltiplos Clientes
-                </Button>
-            </DialogTrigger>
+            if (!val) resetModal()
+        }
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={handleOpenChange}>
+            {!isControlled && (
+                <DialogTrigger asChild>
+                    <Button variant="outline">
+                        <Users className="mr-2 h-4 w-4" />
+                        Múltiplos Clientes
+                    </Button>
+                </DialogTrigger>
+            )}
             <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Adicionar Múltiplos Clientes</DialogTitle>
@@ -217,11 +231,11 @@ export function MultiClientUploadModal({ userId, onSuccess }: MultiClientUploadM
                                         </div>
 
                                         {item.status === 'pending' && (
-                                            <div className="pl-8">
+                                            <div className="pl-8 relative">
                                                 <Input
-                                                    type="password"
-                                                    placeholder="Senha do certificado (opcional)"
-                                                    className="h-8 text-xs w-full"
+                                                    type={item.showPassword ? "text" : "password"}
+                                                    placeholder="Senha do certificado"
+                                                    className="h-8 text-xs w-full pr-8"
                                                     value={item.password || ''}
                                                     onChange={(e) => {
                                                         const newFiles = [...files]
@@ -231,6 +245,25 @@ export function MultiClientUploadModal({ userId, onSuccess }: MultiClientUploadM
                                                     disabled={processing}
                                                     onClick={(e) => e.stopPropagation()}
                                                 />
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="absolute right-0 top-0 h-8 w-8 text-gray-400 hover:text-gray-600"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        const newFiles = [...files]
+                                                        newFiles[index].showPassword = !newFiles[index].showPassword
+                                                        setFiles(newFiles)
+                                                    }}
+                                                    disabled={processing}
+                                                >
+                                                    {item.showPassword ? (
+                                                        <EyeOff className="h-3 w-3" />
+                                                    ) : (
+                                                        <Eye className="h-3 w-3" />
+                                                    )}
+                                                </Button>
                                             </div>
                                         )}
                                     </div>
@@ -243,7 +276,7 @@ export function MultiClientUploadModal({ userId, onSuccess }: MultiClientUploadM
                         <Button
                             type="button"
                             variant="outline"
-                            onClick={() => setOpen(false)}
+                            onClick={() => handleOpenChange(false)}
                             disabled={processing}
                             className="flex-1"
                         >
