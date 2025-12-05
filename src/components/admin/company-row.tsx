@@ -15,6 +15,7 @@ interface CompanyRowProps {
         createdAt: Date
         _count: {
             certificates: number
+            clients: number
         }
     }
 }
@@ -38,7 +39,7 @@ export function CompanyRow({ user }: CompanyRowProps) {
         >
             <TableCell className="font-mono text-xs">{user.id.slice(-6).toUpperCase()}</TableCell>
             <TableCell>
-                {format(new Date(user.createdAt), "d 'de' MMMM 'de' yyyy", {
+                {format(new Date(user.createdAt), "dd/MM/yyyy", {
                     locale: ptBR,
                 })}
             </TableCell>
@@ -46,7 +47,8 @@ export function CompanyRow({ user }: CompanyRowProps) {
                 {user.name}
             </TableCell>
             <TableCell>{user.cnpj || '-'}</TableCell>
-            <TableCell>{user._count.certificates}</TableCell>
+            <TableCell className="text-center">{user._count.clients}</TableCell>
+            <TableCell className="text-center">{user._count.certificates}</TableCell>
             <TableCell className="text-right">
                 <div onClick={(e) => e.stopPropagation()}>
                     <UserActions user={user} />

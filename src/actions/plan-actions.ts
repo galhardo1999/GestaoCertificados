@@ -30,7 +30,7 @@ export async function getPlans(
     const [plans, total] = await Promise.all([
         prisma.plan.findMany({
             where,
-            orderBy: { createdAt: 'desc' },
+            orderBy: { code: 'desc' },
             skip,
             take: limit
         }),

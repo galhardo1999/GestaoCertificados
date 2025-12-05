@@ -37,7 +37,10 @@ export async function getUsers(
                 cnpj: true,
                 createdAt: true,
                 _count: {
-                    select: { certificates: true }
+                    select: {
+                        certificates: true,
+                        clients: true
+                    }
                 }
             },
             orderBy: { createdAt: 'desc' },

@@ -333,3 +333,107 @@ export async function getCertificateDownloadUrlAction(fileKey: string) {
         return { success: false, message: 'Erro ao gerar link de download' }
     }
 }
+
+export async function processCertificateAndCreateClient(
+    formData: FormData,
+    userId: string
+): Promise<{ success: boolean; message: string; clientName?: string }> {
+    try {
+        const file = formData.get('file') as File
+        const password = formData.get('password') as string | null
+
+        if (!file) {
+            return { success: false, message: 'Arquivo não fornecido' }
+        }
+
+        // 1. Validate and Parse Certificate
+        const arrayBuffer = await file.arrayBuffer()
+        const fileBuffer = Buffer.from(arrayBuffer)
+
+        if (!isPfxFile(fileBuffer)) {
+            return { success: false, message: 'Arquivo inválido (não é .pfx/.p12)' }
+        }
+
+        const metadata = await parseCertificate(fileBuffer, password || undefined)
+
+        if (!metadata.cnpj) {
+            return { success: false, message: 'CNPJ não encontrado no certificado' }
+        }
+
+        // 2. Fetch Address Data
+        // We import dynamically to avoid circular deps if any, though here it's fine
+        const { fetchCnpjData } = await import('./cnpj-actions')
+        const addressData = await fetchCnpjData(metadata.cnpj)
+
+        const companyName = metadata.companyName || (addressData.success && addressData.data?.company.name) || 'Empresa Sem Nome'
+
+        // 3. Create Client
+        // Check if client already exists with this CNPJ for this user
+        const existingClient = await prisma.client.findFirst({
+            where: {
+                userId,
+                cnpj: metadata.cnpj
+            }
+        })
+
+        let clientId = existingClient?.id
+
+        if (!existingClient) {
+            const newClient = await prisma.client.create({
+                data: {
+                    userId,
+                    companyName: companyName,
+                    cnpj: metadata.cnpj,
+                    address: addressData.success ? addressData.data?.address.street : null,
+                    number: addressData.success ? addressData.data?.address.number : null,
+                    neighborhood: addressData.success ? addressData.data?.address.district : null,
+                    city: addressData.success ? addressData.data?.address.city : null,
+                    state: addressData.success ? addressData.data?.address.state : null,
+                }
+            })
+            clientId = newClient.id
+        }
+
+        if (!clientId) {
+            return { success: false, message: 'Falha ao criar ou recuperar cliente' }
+        }
+
+        // 4. Upload Certificate and Create Record
+        const fileKey = await uploadFileToS3({
+            fileBuffer,
+            fileName: file.name,
+            contentType: 'application/x-pkcs12',
+            userId,
+        })
+
+        await prisma.certificate.create({
+            data: {
+                userId,
+                clientId,
+                fileKey,
+                holderName: metadata.holderName,
+                expirationDate: metadata.expirationDate,
+                status: 'ACTIVE',
+                metadata: {
+                    issuer: metadata.issuer,
+                    serialNumber: metadata.serialNumber,
+                    subject: metadata.subject,
+                },
+            },
+        })
+
+        revalidatePath('/dashboard/clientes')
+        return {
+            success: true,
+            message: existingClient ? 'Certificado adicionado a cliente existente' : 'Cliente criado com sucesso',
+            clientName: companyName
+        }
+
+    } catch (error) {
+        console.error('Error processing certificate:', error)
+        return {
+            success: false,
+            message: error instanceof Error ? error.message : 'Erro desconhecido ao processar'
+        }
+    }
+}

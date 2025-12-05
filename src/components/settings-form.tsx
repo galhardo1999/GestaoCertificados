@@ -19,9 +19,10 @@ interface SettingsFormProps {
         phone1?: string | null
         phone2?: string | null
     }
+    readOnly?: boolean
 }
 
-export function SettingsForm({ user }: SettingsFormProps) {
+export function SettingsForm({ user, readOnly = false }: SettingsFormProps) {
     const [loading, setLoading] = useState(false)
     const [name, setName] = useState(user.name || '')
     const [cnpj, setCnpj] = useState(user.cnpj || '')
@@ -64,6 +65,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        if (readOnly) return
         setLoading(true)
 
         try {
@@ -93,18 +95,34 @@ export function SettingsForm({ user }: SettingsFormProps) {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-8">
+            {readOnly && (
+                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                    <div className="flex">
+                        <div className="flex-shrink-0">
+                            <AlertCircle className="h-5 w-5 text-yellow-400" aria-hidden="true" />
+                        </div>
+                        <div className="ml-3">
+                            <p className="text-sm text-yellow-700">
+                                Você está visualizando as configurações da empresa. Apenas o usuário principal pode fazer alterações.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Left Column: Inputs */}
                 <div className="md:col-span-2 space-y-6">
 
 
                     <div className="space-y-2">
-                        <Label htmlFor="name">Nome</Label>
+                        <Label htmlFor="name">Nome da Empresa</Label>
                         <Input
                             id="name"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            placeholder="Seu nome"
+                            placeholder="Nome da Empresa"
+                            disabled={readOnly}
                         />
                     </div>
 
@@ -115,7 +133,12 @@ export function SettingsForm({ user }: SettingsFormProps) {
                             value={cnpj}
                             onChange={(e) => setCnpj(e.target.value)}
                             placeholder="00.000.000/0000-00"
+                            disabled={true}
+                            className="bg-gray-100"
                         />
+                        <p className="text-xs text-gray-500">
+                            O CNPJ não pode ser alterado
+                        </p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -127,6 +150,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
                                 onChange={handlePhoneChange(setPhone1)}
                                 placeholder="(00) 00000-0000"
                                 maxLength={15} // (XX) XXXXX-XXXX is 15 chars
+                                disabled={readOnly}
                             />
                         </div>
                         <div className="space-y-2">
@@ -137,6 +161,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
                                 onChange={handlePhoneChange(setPhone2)}
                                 placeholder="(00) 00000-0000"
                                 maxLength={15}
+                                disabled={readOnly}
                             />
                         </div>
                     </div>
@@ -162,6 +187,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
                             onChange={(e) => setWhatsappTemplate(e.target.value)}
                             placeholder="Digite a mensagem padrão..."
                             rows={6}
+                            disabled={readOnly}
                         />
                         <div className="text-xs text-gray-500 space-y-1">
                             <p>Variáveis disponíveis:</p>
@@ -180,7 +206,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
                     <div className="relative">
                         <label
                             htmlFor="logo"
-                            className="flex flex-col items-center justify-center w-full aspect-square rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors overflow-hidden"
+                            className={`flex flex-col items-center justify-center w-full aspect-square rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 ${!readOnly ? 'hover:bg-gray-100 cursor-pointer' : 'cursor-not-allowed opacity-60'} transition-colors overflow-hidden`}
                         >
                             {logoPreview ? (
                                 <img
@@ -201,6 +227,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
                                 accept="image/png, image/jpeg, image/jpg, image/avif"
                                 className="hidden"
                                 onChange={handleLogoChange}
+                                disabled={readOnly}
                             />
                         </label>
                     </div>
@@ -211,21 +238,23 @@ export function SettingsForm({ user }: SettingsFormProps) {
 
             </div>
 
-            <div className="flex justify-end pt-4 border-t">
-                <Button type="submit" disabled={loading} size="lg">
-                    {loading ? (
-                        <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Salvando...
-                        </>
-                    ) : (
-                        <>
-                            <Save className="mr-2 h-4 w-4" />
-                            Salvar Alterações
-                        </>
-                    )}
-                </Button>
-            </div>
+            {!readOnly && (
+                <div className="flex justify-end pt-4 border-t">
+                    <Button type="submit" disabled={loading} size="lg">
+                        {loading ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Salvando...
+                            </>
+                        ) : (
+                            <>
+                                <Save className="mr-2 h-4 w-4" />
+                                Salvar Alterações
+                            </>
+                        )}
+                    </Button>
+                </div>
+            )}
         </form >
     )
 }

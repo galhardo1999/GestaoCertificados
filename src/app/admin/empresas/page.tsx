@@ -40,14 +40,16 @@ export default async function UsersPage({
                         Gerencie as empresas cadastradas no sistema.
                     </p>
                 </div>
-                <CreateUserModal />
+                <div className="flex items-center gap-4">
+                    <SearchInput />
+                    <CreateUserModal />
+                </div>
             </div>
 
             <div className="flex items-center justify-between">
                 <div className="text-sm text-muted-foreground">
                     Total: {total} empresa{total !== 1 ? 's' : ''}
                 </div>
-                <SearchInput />
             </div>
 
             <div className="rounded-md border bg-white">
@@ -58,7 +60,8 @@ export default async function UsersPage({
                             <TableHead>Data de Cadastro</TableHead>
                             <TableHead>Nome</TableHead>
                             <TableHead>CNPJ</TableHead>
-                            <TableHead>Certificados</TableHead>
+                            <TableHead className="text-center">Clientes</TableHead>
+                            <TableHead className="text-center">Certificados</TableHead>
                             <TableHead className="text-right">Ações</TableHead>
                         </TableRow>
                     </TableHeader>

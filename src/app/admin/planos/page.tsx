@@ -36,14 +36,16 @@ export default async function PlansPage({
                         Gerencie os planos disponíveis no sistema.
                     </p>
                 </div>
-                <CreatePlanModal />
+                <div className="flex items-center gap-4">
+                    <SearchInput />
+                    <CreatePlanModal />
+                </div>
             </div>
 
             <div className="flex items-center justify-between">
                 <div className="text-sm text-muted-foreground">
                     Total: {total} plano{total !== 1 ? 's' : ''}
                 </div>
-                <SearchInput />
             </div>
 
             <div className="rounded-md border bg-white">

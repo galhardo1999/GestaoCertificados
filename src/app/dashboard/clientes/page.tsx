@@ -1,18 +1,14 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Users, Building2, Shield, Pencil, Trash2 } from 'lucide-react'
+import { Users, Building2, Shield, Filter } from 'lucide-react'
 import { CreateClientModal } from '@/components/create-client-modal'
+import { MultiClientUploadModal } from '@/components/multi-client-upload-modal'
 import { getClients } from '@/actions/client-actions'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { StatusBadge } from '@/components/status-badge'
-import { calculateDaysRemaining, formatDateBR } from '@/lib/utils'
-
+import { Button } from '@/components/ui/button'
+import { calculateDaysRemaining } from '@/lib/utils'
 import { SearchInput } from '@/components/search-input'
-import { SortableHeader } from '@/components/sortable-header'
 import { Pagination } from '@/components/pagination'
-import { EditClientModal } from '@/components/edit-client-modal'
-import { DeleteClientDialog } from '@/components/delete-client-dialog'
 import { ClientsTable } from '@/components/clients-table'
 
 export default async function ClientesPage({
@@ -42,7 +38,19 @@ export default async function ClientesPage({
     const totalCertificates = clients.reduce((sum, c) => sum + c._count.certificates, 0)
 
     // Flatten clients with their certificates for table view
-    const certificateRows = clients.flatMap(client => {
+    type CertificateRow = {
+        clientId: string
+        clientName: string
+        cnpj: string
+        phone: string | null
+        certificateId: string
+        holderName: string
+        expirationDate: Date | null
+        status: string
+        daysRemaining: number | null
+    }
+
+    const certificateRows: CertificateRow[] = clients.flatMap(client => {
         if (client.certificates.length === 0) {
             return [{
                 clientId: client.id,
@@ -54,7 +62,7 @@ export default async function ClientesPage({
                 expirationDate: null,
                 status: 'NO_CERTIFICATE',
                 daysRemaining: null,
-            }]
+            }] as CertificateRow[]
         }
 
         return client.certificates.map(cert => ({
@@ -67,18 +75,8 @@ export default async function ClientesPage({
             expirationDate: cert.expirationDate,
             status: cert.status,
             daysRemaining: calculateDaysRemaining(cert.expirationDate),
-        })) as any[]
-    }) as {
-        clientId: string
-        clientName: string
-        cnpj: string
-        phone: string | null
-        certificateId: string
-        holderName: string
-        expirationDate: Date | null
-        status: string
-        daysRemaining: number | null
-    }[]
+        })) as CertificateRow[]
+    })
 
     // Sort rows
     certificateRows.sort((a, b) => {
@@ -89,6 +87,7 @@ export default async function ClientesPage({
                 // Sort by days remaining (nulls last)
                 if (a.daysRemaining === null) return 1
                 if (b.daysRemaining === null) return -1
+                // @ts-ignore
                 return (a.daysRemaining - b.daysRemaining) * modifier
             case 'expirationDate':
                 // Sort by date (nulls last)
@@ -118,6 +117,7 @@ export default async function ClientesPage({
                         </p>
                     </div>
                     <div className="flex items-center gap-4">
+                        <MultiClientUploadModal userId={userId} />
                         <CreateClientModal userId={userId} />
                     </div>
                 </div>

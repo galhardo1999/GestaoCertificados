@@ -49,8 +49,31 @@ export function ViewClientModal({ client, open, onOpenChange }: ViewClientModalP
                                 <p className="mt-1 text-sm text-gray-900">{client.phone || '-'}</p>
                             </div>
                         </div>
+
+                        <div className="pt-4 border-t">
+                            <h4 className="text-sm font-medium text-gray-900 mb-3">Endereço</h4>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="col-span-2">
+                                    <label className="text-sm font-medium text-gray-700">Logradouro</label>
+                                    <p className="mt-1 text-sm text-gray-900">
+                                        {client.address ? `${client.address}, ${client.number || 'S/N'}` : '-'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-700">Bairro</label>
+                                    <p className="mt-1 text-sm text-gray-900">{client.neighborhood || '-'}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-700">Cidade/UF</label>
+                                    <p className="mt-1 text-sm text-gray-900">
+                                        {client.city ? `${client.city}/${client.state || ''}` : '-'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
                         {client.description && (
-                            <div>
+                            <div className="pt-4 border-t">
                                 <label className="text-sm font-medium text-gray-700">Descrição</label>
                                 <p className="mt-1 text-sm text-gray-900">{client.description}</p>
                             </div>
@@ -91,24 +114,24 @@ export function ViewClientModal({ client, open, onOpenChange }: ViewClientModalP
 
                                                     return (
                                                         <div key={cert.id} className={`flex items-center justify-between p-3 border rounded-lg ${isExpired
-                                                                ? 'bg-red-50 border-red-200'
-                                                                : isActive
-                                                                    ? 'bg-green-50 border-green-200'
-                                                                    : 'bg-gray-50'
+                                                            ? 'bg-red-50 border-red-200'
+                                                            : isActive
+                                                                ? 'bg-green-50 border-green-200'
+                                                                : 'bg-gray-50'
                                                             }`}>
                                                             <div className="space-y-1">
                                                                 <div className="flex items-center gap-2">
                                                                     <span className={`w-2 h-2 rounded-full ${isExpired
-                                                                            ? 'bg-red-500'
-                                                                            : isActive
-                                                                                ? 'bg-green-500'
-                                                                                : 'bg-gray-400'
+                                                                        ? 'bg-red-500'
+                                                                        : isActive
+                                                                            ? 'bg-green-500'
+                                                                            : 'bg-gray-400'
                                                                         }`} />
                                                                     <span className={`font-medium text-sm ${isExpired
-                                                                            ? 'text-red-900'
-                                                                            : isActive
-                                                                                ? 'text-green-900'
-                                                                                : 'text-gray-700'
+                                                                        ? 'text-red-900'
+                                                                        : isActive
+                                                                            ? 'text-green-900'
+                                                                            : 'text-gray-700'
                                                                         }`}>
                                                                         {cert.holderName}
                                                                     </span>
@@ -119,10 +142,10 @@ export function ViewClientModal({ client, open, onOpenChange }: ViewClientModalP
                                                             </div>
                                                             <div className="flex items-center gap-2">
                                                                 <div className={`text-xs font-medium px-2 py-1 rounded-full border ${isExpired
-                                                                        ? 'bg-white text-red-700 border-red-200'
-                                                                        : isActive
-                                                                            ? 'bg-white text-green-700 border-green-200'
-                                                                            : 'bg-white text-gray-500'
+                                                                    ? 'bg-white text-red-700 border-red-200'
+                                                                    : isActive
+                                                                        ? 'bg-white text-green-700 border-green-200'
+                                                                        : 'bg-white text-gray-500'
                                                                     }`}>
                                                                     {isExpired ? 'Expirado' : (isActive ? 'Vigente' : 'Histórico')}
                                                                 </div>

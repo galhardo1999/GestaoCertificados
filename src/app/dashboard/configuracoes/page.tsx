@@ -18,6 +18,17 @@ export default async function ConfiguracoesPage() {
             cnpj: true,
             phone1: true,
             phone2: true,
+            masterUserId: true,
+            masterUser: {
+                select: {
+                    name: true,
+                    whatsappTemplate: true,
+                    logoUrl: true,
+                    cnpj: true,
+                    phone1: true,
+                    phone2: true,
+                }
+            }
         },
     })
 
@@ -25,11 +36,23 @@ export default async function ConfiguracoesPage() {
         return <div>Usuário não encontrado</div>
     }
 
-    let logoUrl = user.logoUrl
+    const displayData = {
+        name: user.masterUser?.name ?? user.name,
+        email: user.email,
+        whatsappTemplate: user.masterUser?.whatsappTemplate ?? user.whatsappTemplate,
+        logoUrl: user.masterUser?.logoUrl ?? user.logoUrl,
+        cnpj: user.masterUser?.cnpj ?? user.cnpj,
+        phone1: user.masterUser?.phone1 ?? user.phone1,
+        phone2: user.masterUser?.phone2 ?? user.phone2,
+    }
+
+    let logoUrl = displayData.logoUrl
     if (logoUrl) {
         const { getSignedDownloadUrl } = await import('@/lib/s3')
         logoUrl = await getSignedDownloadUrl(logoUrl)
     }
+
+    const isPrincipal = !user.masterUserId
 
     return (
         <div className="min-h-full bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -44,7 +67,7 @@ export default async function ConfiguracoesPage() {
                 </div>
 
                 <div className="bg-white rounded-lg border p-6 shadow-sm">
-                    <SettingsForm user={{ ...user, logoUrl }} />
+                    <SettingsForm user={{ ...displayData, logoUrl }} readOnly={!isPrincipal} />
                 </div>
             </div>
         </div>

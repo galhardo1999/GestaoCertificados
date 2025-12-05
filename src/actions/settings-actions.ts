@@ -38,12 +38,20 @@ export async function updateSettings(formData: FormData) {
             logoUrl = fileKey
         }
 
+        const currentUser = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { masterUserId: true }
+        })
+
+        if (currentUser?.masterUserId) {
+            return { success: false, message: 'Apenas o usuário principal pode alterar as configurações.' }
+        }
+
         await prisma.user.update({
             where: { id: userId },
             data: {
                 name,
                 whatsappTemplate,
-                cnpj,
                 phone1,
                 phone2,
                 ...(logoUrl && { logoUrl }),
