@@ -57,7 +57,7 @@ export async function createPlan(data: {
     }
 
     try {
-        // Find the last created plan to determine the next code
+        // Encontrar o último plano criado para determinar o próximo código
         const lastPlan = await prisma.plano.findFirst({
             orderBy: {
                 criadoEm: 'desc'
@@ -70,16 +70,16 @@ export async function createPlan(data: {
             if (!isNaN(lastCodeInt)) {
                 nextCode = (lastCodeInt + 1).toString().padStart(2, '0')
             } else {
-                // If the last code is not a number, try to find the highest number or fallback
-                // For now, let's just fallback to a safe increment if possible or '01' if completely broken
-                // But since we control it now, it should be fine.
-                // If the user manually edited to "ABC", we might have an issue.
-                // Let's assume we want to continue the sequence from the count or similar?
-                // Better: try to parse, if fail, maybe count + 1?
-                // Let's stick to parsing the last one. If it fails, maybe we look for others?
-                // Simple approach:
+                // Se o último código não for um número, tentar encontrar o maior número ou usar fallback
+                // Por enquanto, vamos apenas usar um incremento seguro se possível ou '01' se estiver totalmente quebrado
+                // Mas como controlamos isso agora, deve ficar tudo bem.
+                // Se o usuário editou manualmente para "ABC", podemos ter um problema.
+                // Vamos assumir que queremos continuar a sequência a partir da contagem ou similar?
+                // Melhor: tentar analisar, se falhar, talvez contagem + 1?
+                // Vamos continuar analisando o último. Se falhar, talvez procuremos outros?
+                // Abordagem simples:
                 nextCode = '01' // Fallback
-                // If we want to be robust against non-numeric codes existing:
+                // Se quisermos ser robustos contra a existência de códigos não numéricos:
                 const allPlans = await prisma.plano.findMany({
                     select: { codigo: true }
                 })
@@ -94,7 +94,7 @@ export async function createPlan(data: {
             }
         }
 
-        // Ensure uniqueness just in case (though unlikely with the max logic)
+        // Garantir unicidade apenas por precaução (embora improvável com a lógica max)
         let isUnique = false
         while (!isUnique) {
             const existing = await prisma.plano.findUnique({ where: { codigo: nextCode } })

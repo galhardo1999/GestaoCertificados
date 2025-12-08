@@ -29,7 +29,7 @@ export async function createClient(
         const file = formData.get('file') as File | null
         const password = formData.get('password') as string | null
 
-        // Validate required fields
+        // Validar campos obrigatórios
         if (!companyName || !cnpj) {
             return {
                 success: false,
@@ -37,7 +37,7 @@ export async function createClient(
             }
         }
 
-        // Create client
+        // Criar cliente
         const client = await prisma.cliente.create({
             data: {
                 usuarioId: userId,
@@ -52,11 +52,11 @@ export async function createClient(
             },
         })
 
-        // If certificate file is provided, upload it
+        // Se um arquivo de certificado for fornecido, fazer upload
         if (file && file.size > 0) {
-            // Validate file type
+            // Validar tipo de arquivo
             if (!file.name.endsWith('.pfx') && !file.name.endsWith('.p12')) {
-                // Delete the client if certificate upload fails
+                // Excluir o cliente se o upload do certificado falhar
                 await prisma.cliente.delete({ where: { id: client.id } })
                 return {
                     success: false,
@@ -64,11 +64,11 @@ export async function createClient(
                 }
             }
 
-            // Convert file to buffer
+            // Converter arquivo para buffer
             const arrayBuffer = await file.arrayBuffer()
             const fileBuffer = Buffer.from(arrayBuffer)
 
-            // Validate it's a valid PFX file
+            // Validar se é um arquivo PFX válido
             if (!isPfxFile(fileBuffer)) {
                 await prisma.cliente.delete({ where: { id: client.id } })
                 return {
@@ -77,10 +77,10 @@ export async function createClient(
                 }
             }
 
-            // Parse certificate to extract metadata
+            // Analisar certificado para extrair metadados
             const metadata = await parseCertificate(fileBuffer, password || undefined)
 
-            // Upload file to S3
+            // Fazer upload do arquivo para o S3
             const fileKey = await uploadFileToS3({
                 fileBuffer,
                 fileName: file.name,
@@ -88,7 +88,7 @@ export async function createClient(
                 userId,
             })
 
-            // Create certificate linked to client
+            // Criar certificado vinculado ao cliente
             await prisma.certificado.create({
                 data: {
                     usuarioId: userId,
@@ -171,18 +171,18 @@ export async function getClients(
 
 export async function deleteClient(clientId: string) {
     try {
-        // Get all certificates for this client to delete their S3 files
+        // Obter todos os certificados deste cliente para excluir seus arquivos S3
         const certificates = await prisma.certificado.findMany({
             where: { clienteId: clientId },
             select: { chaveArquivo: true }
         })
 
-        // Delete all certificate files from S3
+        // Excluir todos os arquivos de certificado do S3
         await Promise.all(
             certificates.map(cert => deleteFileFromS3(cert.chaveArquivo))
         )
 
-        // Delete client (cascade will delete certificates from DB)
+        // Excluir cliente (cascade excluirá certificados do BD)
         await prisma.cliente.delete({
             where: { id: clientId },
         })
@@ -241,24 +241,24 @@ export async function addCertificate(
             return { success: false, message: 'Arquivo do certificado é obrigatório' }
         }
 
-        // Validate file type
+        // Validar tipo de arquivo
         if (!file.name.endsWith('.pfx') && !file.name.endsWith('.p12')) {
             return { success: false, message: 'Arquivo deve ser do tipo .pfx ou .p12' }
         }
 
-        // Convert file to buffer
+        // Converter arquivo para buffer
         const arrayBuffer = await file.arrayBuffer()
         const fileBuffer = Buffer.from(arrayBuffer)
 
-        // Validate it's a valid PFX file
+        // Validar se é um arquivo PFX válido
         if (!isPfxFile(fileBuffer)) {
             return { success: false, message: 'Arquivo .pfx inválido ou corrompido' }
         }
 
-        // Parse certificate to extract metadata
+        // Analisar certificado para extrair metadados
         const metadata = await parseCertificate(fileBuffer, password || undefined)
 
-        // Upload file to S3
+        // Fazer upload do arquivo para o S3
         const fileKey = await uploadFileToS3({
             fileBuffer,
             fileName: file.name,
@@ -266,7 +266,7 @@ export async function addCertificate(
             userId,
         })
 
-        // Create certificate linked to client
+        // Criar certificado vinculado ao cliente
         await prisma.certificado.create({
             data: {
                 usuarioId: userId,
@@ -299,11 +299,11 @@ export async function deleteCertificate(certificateId: string) {
     const userId = session.user.id
 
     try {
-        // Get certificate to retrieve fileKey before deleting
+        // Obter certificado para recuperar fileKey antes de excluir
         const certificate = await prisma.certificado.findFirst({
             where: {
                 id: certificateId,
-                usuarioId: userId // Ensure ownership
+                usuarioId: userId // Garantir propriedade
             },
             select: { chaveArquivo: true }
         })
@@ -312,10 +312,10 @@ export async function deleteCertificate(certificateId: string) {
             return { success: false, message: 'Certificado não encontrado' }
         }
 
-        // Delete file from S3
+        // Excluir arquivo do S3
         await deleteFileFromS3(certificate.chaveArquivo).catch(console.error)
 
-        // Delete certificate from DB
+        // Excluir certificado do BD
         await prisma.certificado.delete({
             where: { id: certificateId },
         })
@@ -355,7 +355,7 @@ export async function processCertificateAndCreateClient(
             return { success: false, message: 'Arquivo não fornecido' }
         }
 
-        // 1. Validate and Parse Certificate
+        // 1. Validar e Analisar Certificado
         const arrayBuffer = await file.arrayBuffer()
         const fileBuffer = Buffer.from(arrayBuffer)
 
@@ -369,15 +369,15 @@ export async function processCertificateAndCreateClient(
             return { success: false, message: 'CNPJ não encontrado no certificado' }
         }
 
-        // 2. Fetch Address Data
-        // We import dynamically to avoid circular deps if any, though here it's fine
+        // 2. Buscar Dados de Endereço
+        // Importamos dinamicamente para evitar dependências circulares, se houver, embora aqui esteja tudo bem
         const { fetchCnpjData } = await import('./cnpj-actions')
         const addressData = await fetchCnpjData(metadata.cnpj)
 
         const companyName = metadata.companyName || (addressData.success && addressData.data?.company.name) || 'Empresa Sem Nome'
 
-        // 3. Create Client
-        // Check if client already exists with this CNPJ for this user
+        // 3. Criar Cliente
+        // Verificar se o cliente já existe com este CNPJ para este usuário
         const existingClient = await prisma.cliente.findFirst({
             where: {
                 usuarioId: userId,
@@ -408,7 +408,7 @@ export async function processCertificateAndCreateClient(
             return { success: false, message: 'Falha ao criar ou recuperar cliente' }
         }
 
-        // 4. Upload Certificate and Create Record
+        // 4. Fazer Upload do Certificado e Criar Registro
         const fileKey = await uploadFileToS3({
             fileBuffer,
             fileName: file.name,

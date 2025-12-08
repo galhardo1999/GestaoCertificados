@@ -20,7 +20,7 @@ export interface CertificateWithDays {
 }
 
 /**
- * Get all certificates for a user with calculated days remaining
+ * Obter todos os certificados de um usuário com dias restantes calculados
  */
 export async function getCertificates(userId: string): Promise<CertificateWithDays[]> {
     try {
@@ -42,7 +42,7 @@ export async function getCertificates(userId: string): Promise<CertificateWithDa
             },
         })
 
-        // Add days remaining to each certificate
+        // Adicionar dias restantes a cada certificado
         return certificates.map(cert => ({
             id: cert.id,
             userId: cert.usuarioId,
@@ -72,7 +72,7 @@ import { authOptions } from '@/lib/auth'
 import { deleteFileFromS3 } from '@/lib/s3'
 
 /**
- * Delete a certificate
+ * Excluir um certificado
  */
 export async function deleteCertificate(certificateId: string): Promise<boolean> {
     const session = await getServerSession(authOptions)
@@ -82,7 +82,7 @@ export async function deleteCertificate(certificateId: string): Promise<boolean>
     const userId = session.user.id
 
     try {
-        // Verify ownership and get file key before deleting
+        // Verificar propriedade e obter chave do arquivo antes de excluir
         const certificate = await prisma.certificado.findFirst({
             where: {
                 id: certificateId,
@@ -98,7 +98,7 @@ export async function deleteCertificate(certificateId: string): Promise<boolean>
             throw new Error('Certificado não encontrado')
         }
 
-        // Delete file from S3
+        // Excluir arquivo do S3
         await deleteFileFromS3(certificate.chaveArquivo).catch(console.error)
 
         await prisma.certificado.delete({

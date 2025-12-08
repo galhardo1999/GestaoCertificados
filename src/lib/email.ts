@@ -4,34 +4,34 @@ const resend = new Resend(process.env.RESEND_API_KEY!)
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@yourdomain.com'
 
 export interface SendEmailParams {
-    to: string
-    subject: string
-    html: string
+  to: string
+  subject: string
+  html: string
 }
 
 /**
- * Send an email using Resend
+ * Enviar um email usando Resend
  */
 export async function sendEmail({ to, subject, html }: SendEmailParams) {
-    try {
-        const result = await resend.emails.send({
-            from: FROM_EMAIL,
-            to,
-            subject,
-            html,
-        })
-        return result
-    } catch (error) {
-        console.error('Error sending email:', error)
-        throw error
-    }
+  try {
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      subject,
+      html,
+    })
+    return result
+  } catch (error) {
+    console.error('Error sending email:', error)
+    throw error
+  }
 }
 
 /**
- * Email template for 45-day planning alert
+ * Modelo de email para alerta de planejamento de 45 dias
  */
 export function get45DayAlertTemplate(holderName: string, expirationDate: string) {
-    return `
+  return `
     <!DOCTYPE html>
     <html>
       <head>
@@ -62,10 +62,10 @@ export function get45DayAlertTemplate(holderName: string, expirationDate: string
 }
 
 /**
- * Email template for 15-day urgency alert
+ * Modelo de email para alerta de urgência de 15 dias
  */
 export function get15DayAlertTemplate(holderName: string, expirationDate: string) {
-    return `
+  return `
     <!DOCTYPE html>
     <html>
       <head>
@@ -100,10 +100,10 @@ export function get15DayAlertTemplate(holderName: string, expirationDate: string
 }
 
 /**
- * Email template for 0-day critical alert (expiring today)
+ * Modelo de email para alerta crítico de 0 dias (vencendo hoje)
  */
 export function get0DayAlertTemplate(holderName: string, expirationDate: string) {
-    return `
+  return `
     <!DOCTYPE html>
     <html>
       <head>
@@ -138,16 +138,16 @@ export function get0DayAlertTemplate(holderName: string, expirationDate: string)
 }
 
 /**
- * Send admin notification for critical certificates
+ * Enviar notificação de administrador para certificados críticos
  */
 export async function sendAdminNotification(holderName: string, userEmail: string, expirationDate: string) {
-    const adminEmail = process.env.ADMIN_EMAIL
-    if (!adminEmail) {
-        console.warn('ADMIN_EMAIL not configured, skipping admin notification')
-        return
-    }
+  const adminEmail = process.env.ADMIN_EMAIL
+  if (!adminEmail) {
+    console.warn('ADMIN_EMAIL not configured, skipping admin notification')
+    return
+  }
 
-    const html = `
+  const html = `
     <!DOCTYPE html>
     <html>
       <body style="font-family: Arial, sans-serif;">
@@ -160,9 +160,9 @@ export async function sendAdminNotification(holderName: string, userEmail: strin
     </html>
   `
 
-    await sendEmail({
-        to: adminEmail,
-        subject: `🚨 URGENTE: Certificado vencendo HOJE - ${holderName}`,
-        html,
-    })
+  await sendEmail({
+    to: adminEmail,
+    subject: `🚨 URGENTE: Certificado vencendo HOJE - ${holderName}`,
+    html,
+  })
 }

@@ -16,24 +16,24 @@ export interface CertificateMetadata {
 }
 
 /**
- * Parse a .pfx (PKCS#12) file and extract certificate metadata
- * @param fileBuffer - The .pfx file as a Buffer
- * @param password - The password to decrypt the .pfx file (optional for some certificates)
- * @returns Certificate metadata including expiration date and holder name
+ * Analisar um arquivo .pfx (PKCS#12) e extrair metadados do certificado
+ * @param fileBuffer - O arquivo .pfx como um Buffer
+ * @param password - A senha para descriptografar o arquivo .pfx (opcional para alguns certificados)
+ * @returns Metadados do certificado, incluindo data de validade e nome do titular
  */
 export async function parseCertificate(
     fileBuffer: Buffer,
     password?: string
 ): Promise<CertificateMetadata> {
     try {
-        // Convert Buffer to binary string
+        // Converter Buffer para string binária
         const binaryString = fileBuffer.toString('binary')
 
-        // Parse PKCS#12
+        // Analisar PKCS#12
         const p12Asn1 = forge.asn1.fromDer(binaryString)
         const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, password || '')
 
-        // Get the certificate from the PKCS#12
+        // Obter o certificado do PKCS#12
         const certBags = p12.getBags({ bagType: forge.pki.oids.certBag })
         const certBag = certBags[forge.pki.oids.certBag]
 
@@ -46,7 +46,7 @@ export async function parseCertificate(
             throw new Error('Invalid certificate in .pfx file')
         }
 
-        // Extract subject information
+        // Extrair informações do sujeito
         const subject = certificate.subject.attributes.reduce((acc, attr) => {
             const name = attr.name || attr.type
             if (name) {
@@ -55,12 +55,12 @@ export async function parseCertificate(
             return acc
         }, {} as Record<string, string>)
 
-        // Extract issuer information
+        // Extrair informações do emissor
         const issuer = certificate.issuer.attributes
             .map(attr => `${attr.name || attr.type}=${attr.value}`)
             .join(', ')
 
-        // Get the holder name (Common Name or Organization Name)
+        // Obter o nome do titular (Nome Comum ou Nome da Organização)
         const holderName =
             subject.commonName ||
             subject.organizationName ||
@@ -68,28 +68,28 @@ export async function parseCertificate(
             subject.O ||
             'Unknown'
 
-        // Get expiration date
+        // Obter data de validade
         const expirationDate = certificate.validity.notAfter
 
-        // Get serial number
+        // Obter número de série
         const serialNumber = certificate.serialNumber
 
-        // --- CNPJ Extraction Logic ---
+        // --- Lógica de Extração de CNPJ ---
         let cnpj = ''
 
-        // 1. Try to find by OID 2.16.76.1.3.3 (ICP-Brasil CNPJ)
-        // Note: node-forge might not map this OID to a name, so we check the type/oid
+        // 1. Tentar encontrar pelo OID 2.16.76.1.3.3 (CNPJ ICP-Brasil)
+        // Nota: node-forge pode não mapear este OID para um nome, então verificamos o tipo/oid
         const cnpjAttribute = certificate.subject.attributes.find(attr =>
             attr.type === '2.16.76.1.3.3' || attr.name === '2.16.76.1.3.3'
         )
 
         if (cnpjAttribute) {
-            // The value might be ASN.1 encoded, but usually forge decodes it to string for these attributes
-            // If it's binary, we might need to decode it. For now assuming string/utf8
+            // O valor pode estar codificado em ASN.1, mas geralmente o forge decodifica para string para esses atributos
+            // Se for binário, podemos precisar decodificá-lo. Por enquanto assumindo string/utf8
             cnpj = String(cnpjAttribute.value || '').replace(/\D/g, '')
         }
 
-        // 2. Fallback: Try to extract from Common Name (format: Name:CNPJ or similar)
+        // 2. Fallback: Tentar extrair do Nome Comum (formato: Nome:CNPJ ou similar)
         if (!cnpj) {
             const cnpjMatch = holderName.match(/\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}/)
             if (cnpjMatch) {
@@ -97,24 +97,24 @@ export async function parseCertificate(
             }
         }
 
-        // --- Company Name Extraction Logic ---
+        // --- Lógica de Extração do Nome da Empresa ---
         let companyName = holderName
 
-        // If we found a CNPJ in the name, remove it
+        // Se encontramos um CNPJ no nome, removê-lo
         if (cnpj) {
-            // Remove the formatted CNPJ if present
+            // Remover o CNPJ formatado, se presente
             const formattedCnpj = cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
             companyName = companyName.replace(formattedCnpj, '')
 
-            // Remove unformatted CNPJ if present
+            // Remover o CNPJ não formatado, se presente
             companyName = companyName.replace(cnpj, '')
         }
 
-        // Clean up the name
+        // Limpar o nome
         companyName = companyName
-            .replace(/:$/, '') // Remove trailing colon
-            .replace(/^[^\w]+/, '') // Remove leading non-word chars
-            .replace(/[^\w]+$/, '') // Remove trailing non-word chars
+            .replace(/:$/, '') // Remover dois pontos no final
+            .replace(/^[^\w]+/, '') // Remover caracteres não verbais no início
+            .replace(/[^\w]+$/, '') // Remover caracteres não verbais no final
             .trim()
 
         return {
@@ -133,7 +133,7 @@ export async function parseCertificate(
         }
     } catch (error) {
         if (error instanceof Error) {
-            // Handle specific errors
+            // Tratar erros específicos
             if (error.message.includes('Invalid password')) {
                 throw new Error('Senha incorreta para o certificado')
             }
@@ -147,7 +147,7 @@ export async function parseCertificate(
 }
 
 /**
- * Validate if a buffer is a valid .pfx file
+ * Validar se um buffer é um arquivo .pfx válido
  */
 export function isPfxFile(fileBuffer: Buffer): boolean {
     try {

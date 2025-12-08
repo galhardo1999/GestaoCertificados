@@ -20,7 +20,7 @@ export interface UploadFileParams {
 }
 
 /**
- * Upload a file to S3 and return the file key
+ * Fazer upload de um arquivo para o S3 e retornar a chave do arquivo
  */
 export async function uploadFileToS3({
     fileBuffer,
@@ -29,7 +29,7 @@ export async function uploadFileToS3({
     userId,
     folder = 'certificates',
 }: UploadFileParams): Promise<string> {
-    // Generate a unique file key with user prefix
+    // Gerar uma chave de arquivo única com prefixo de usuário
     const timestamp = Date.now()
     const fileKey = `${folder}/${userId}/${timestamp}-${fileName}`
 
@@ -38,7 +38,7 @@ export async function uploadFileToS3({
         Key: fileKey,
         Body: fileBuffer,
         ContentType: contentType,
-        // Ensure the file is private
+        // Garantir que o arquivo seja privado
         ACL: 'private',
     })
 
@@ -48,9 +48,9 @@ export async function uploadFileToS3({
 }
 
 /**
- * Generate a signed URL for temporary access to a file
- * @param fileKey - The S3 object key
- * @param expiresIn - URL expiration time in seconds (default: 1 hour)
+ * Gerar uma URL assinada para acesso temporário a um arquivo
+ * @param fileKey - A chave do objeto S3
+ * @param expiresIn - Tempo de expiração da URL em segundos (padrão: 1 hora)
  */
 export async function getSignedDownloadUrl(
     fileKey: string,
@@ -66,8 +66,8 @@ export async function getSignedDownloadUrl(
 }
 
 /**
- * Delete a file from S3
- * @param fileKey - The S3 object key to delete
+ * Excluir um arquivo do S3
+ * @param fileKey - A chave do objeto S3 para excluir
  */
 export async function deleteFileFromS3(fileKey: string): Promise<void> {
     const { DeleteObjectCommand } = await import('@aws-sdk/client-s3')

@@ -47,7 +47,7 @@ export async function updateSettings(formData: FormData) {
             return { success: false, message: 'Apenas o usuário principal pode alterar as configurações.' }
         }
 
-        // Delete old logo if a new one is being uploaded
+        // Excluir logotipo antigo se um novo estiver sendo enviado
         if (logoUrl && currentUser?.urlLogo) {
             const { deleteFileFromS3 } = await import('@/lib/s3')
             await deleteFileFromS3(currentUser.urlLogo).catch(console.error)

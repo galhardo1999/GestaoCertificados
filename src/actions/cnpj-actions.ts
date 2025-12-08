@@ -16,7 +16,7 @@ interface CnpjData {
 }
 
 export async function fetchCnpjData(cnpj: string): Promise<{ success: boolean; data?: CnpjData; message?: string }> {
-    // Remove non-digits
+    // Remover não dígitos
     const cleanCnpj = cnpj.replace(/\D/g, '')
 
     if (cleanCnpj.length !== 14) {
@@ -24,7 +24,7 @@ export async function fetchCnpjData(cnpj: string): Promise<{ success: boolean; d
     }
 
     try {
-        // Try Commercial API first if key is present
+        // Tentar API Comercial primeiro se a chave estiver presente
         const apiKey = process.env.CNPJA_API_KEY
         let url = ''
         let headers: HeadersInit = {}
@@ -35,13 +35,13 @@ export async function fetchCnpjData(cnpj: string): Promise<{ success: boolean; d
                 'Authorization': apiKey
             }
         } else {
-            // Fallback to Public API
+            // Fallback para API Pública
             url = `https://open.cnpja.com/office/${cleanCnpj}`
         }
 
         const response = await fetch(url, {
             headers,
-            next: { revalidate: 3600 } // Cache for 1 hour
+            next: { revalidate: 3600 } // Cache por 1 hora
         })
 
         if (!response.ok) {

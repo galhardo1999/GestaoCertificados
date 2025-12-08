@@ -26,7 +26,7 @@ export async function registerUser(
     }
 ): Promise<RegisterResult> {
     try {
-        // Validate inputs
+        // Validar entradas
         if (!email || !password || !name) {
             return {
                 success: false,
@@ -34,7 +34,7 @@ export async function registerUser(
             }
         }
 
-        // Validate email format
+        // Validar formato de email
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!emailRegex.test(email)) {
             return {
@@ -43,7 +43,7 @@ export async function registerUser(
             }
         }
 
-        // Validate password length
+        // Validar tamanho da senha
         if (password.length < 6) {
             return {
                 success: false,
@@ -51,7 +51,7 @@ export async function registerUser(
             }
         }
 
-        // Check if user already exists
+        // Verificar se usuário já existe
         const existingUser = await prisma.usuario.findUnique({
             where: { email },
         })
@@ -63,16 +63,30 @@ export async function registerUser(
             }
         }
 
-        // Hash password
+        // Verificar se CNPJ já existe
+        if (additionalData?.cnpj) {
+            const existingCnpj = await prisma.usuario.findFirst({
+                where: { cnpj: additionalData.cnpj }
+            })
+
+            if (existingCnpj) {
+                return {
+                    success: false,
+                    message: 'CNPJ já cadastrado',
+                }
+            }
+        }
+
+        // Criptografar senha
         const hashedPassword = await bcrypt.hash(password, 10)
 
-        // Create user
+        // Criar usuário
         const user = await prisma.usuario.create({
             data: {
                 email,
                 senha: hashedPassword,
                 nome: name,
-                // Additional fields
+                // Campos adicionais
                 cnpj: additionalData?.cnpj,
                 telefone1: additionalData?.telefone1,
                 telefone2: additionalData?.telefone2,

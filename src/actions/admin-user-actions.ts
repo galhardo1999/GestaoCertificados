@@ -16,12 +16,20 @@ export async function deleteUser(userId: string) {
     }
 
     try {
-        // 1. Fetch user to get logo and certificates
+        // 1. Buscar usuário e todos os membros da equipe para obter logotipos e certificados
         const user = await prisma.usuario.findUnique({
             where: { id: userId },
             include: {
                 certificados: {
                     select: { chaveArquivo: true }
+                },
+                membrosEquipe: {
+                    select: {
+                        urlLogo: true,
+                        certificados: {
+                            select: { chaveArquivo: true }
+                        }
+                    }
                 }
             }
         })
@@ -30,27 +38,39 @@ export async function deleteUser(userId: string) {
             return { success: false, message: 'Usuário não encontrado' }
         }
 
-        // 2. Delete Logo from S3
-        if (user.urlLogo) {
-            await deleteFileFromS3(user.urlLogo).catch(console.error)
-        }
+        // 2. Coletar todas as chaves S3 para excluir (Usuário + Membros da Equipe)
+        const keysToDelete: string[] = []
 
-        // 3. Delete Certificates from S3
-        if (user.certificados.length > 0) {
+        // Logotipo e certificados do usuário
+        if (user.urlLogo) keysToDelete.push(user.urlLogo)
+        user.certificados.forEach(cert => keysToDelete.push(cert.chaveArquivo))
+
+        // Logotipos e certificados dos membros da equipe
+        user.membrosEquipe.forEach(membro => {
+            if (membro.urlLogo) keysToDelete.push(membro.urlLogo)
+            membro.certificados.forEach(cert => keysToDelete.push(cert.chaveArquivo))
+        })
+
+        // 3. Excluir arquivos do S3
+        if (keysToDelete.length > 0) {
             await Promise.all(
-                user.certificados.map(cert =>
-                    deleteFileFromS3(cert.chaveArquivo).catch(console.error)
-                )
+                keysToDelete.map(key => deleteFileFromS3(key).catch(console.error))
             )
         }
 
-        // 4. Delete User from DB
+        // 4. Excluir Membros da Equipe primeiro (já que referenciam o usuário como mestre)
+        // Nota: A relação é opcional, mas é uma boa prática limpar explicitamente
+        await prisma.usuario.deleteMany({
+            where: { usuarioMestreId: userId }
+        })
+
+        // 5. Excluir Usuário do BD
         await prisma.usuario.delete({
             where: { id: userId }
         })
 
         revalidatePath('/admin/empresas')
-        return { success: true, message: 'Usuário excluído com sucesso' }
+        return { success: true, message: 'Usuário e equipe excluídos com sucesso' }
     } catch (error) {
         console.error('Error deleting user:', error)
         return { success: false, message: 'Erro ao excluir usuário' }

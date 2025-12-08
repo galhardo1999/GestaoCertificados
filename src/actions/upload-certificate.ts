@@ -17,14 +17,14 @@ export interface UploadCertificateResult {
 }
 
 /**
- * Upload and process a certificate file
+ * Fazer upload e processar um arquivo de certificado
  */
 export async function uploadCertificate(
     formData: FormData,
     userId: string
 ): Promise<UploadCertificateResult> {
     try {
-        // Extract file and password from form data
+        // Extrair arquivo e senha dos dados do formulário
         const file = formData.get('file') as File
         const password = formData.get('password') as string | null
 
@@ -36,7 +36,7 @@ export async function uploadCertificate(
             }
         }
 
-        // Validate file type
+        // Validar tipo de arquivo
         if (!file.name.endsWith('.pfx') && !file.name.endsWith('.p12')) {
             return {
                 success: false,
@@ -45,11 +45,11 @@ export async function uploadCertificate(
             }
         }
 
-        // Convert file to buffer
+        // Converter arquivo para buffer
         const arrayBuffer = await file.arrayBuffer()
         const fileBuffer = Buffer.from(arrayBuffer)
 
-        // Validate it's a valid PFX file
+        // Validar se é um arquivo PFX válido
         if (!isPfxFile(fileBuffer)) {
             return {
                 success: false,
@@ -58,10 +58,10 @@ export async function uploadCertificate(
             }
         }
 
-        // Parse certificate to extract metadata
+        // Analisar certificado para extrair metadados
         const metadata = await parseCertificate(fileBuffer, password || undefined)
 
-        // Upload file to S3
+        // Fazer upload do arquivo para o S3
         const fileKey = await uploadFileToS3({
             fileBuffer,
             fileName: file.name,
@@ -69,7 +69,7 @@ export async function uploadCertificate(
             userId,
         })
 
-        // Save certificate to database
+        // Salvar certificado no banco de dados
         const certificate = await prisma.certificado.create({
             data: {
                 usuarioId: userId,
@@ -85,7 +85,7 @@ export async function uploadCertificate(
             },
         })
 
-        // Revalidate the dashboard page
+        // Revalidar a página do dashboard
         revalidatePath('/dashboard')
 
         return {

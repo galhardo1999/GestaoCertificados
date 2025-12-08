@@ -16,7 +16,7 @@ export function calculateDaysRemaining(date: Date | string): number {
   const targetDate = new Date(date)
   const today = new Date()
 
-  // Reset hours to compare just dates
+  // Redefinir horas para comparar apenas datas
   targetDate.setHours(0, 0, 0, 0)
   today.setHours(0, 0, 0, 0)
 

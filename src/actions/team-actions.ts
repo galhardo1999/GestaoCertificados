@@ -14,7 +14,7 @@ export async function addTeamMember(companyId: string, data: { name: string; ema
     }
 
     try {
-        // Check if email exists
+        // Verificar se o email existe
         const existingUser = await prisma.usuario.findUnique({
             where: { email: data.email }
         })
@@ -25,7 +25,7 @@ export async function addTeamMember(companyId: string, data: { name: string; ema
 
         const hashedPassword = await bcrypt.hash(data.password, 10)
 
-        // Create user linked to company
+        // Criar usuário vinculado à empresa
         await prisma.usuario.create({
             data: {
                 nome: data.name,

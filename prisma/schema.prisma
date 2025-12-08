@@ -81,7 +81,7 @@ model Certificado {
   cliente           Cliente?          @relation(fields: [clienteId], references: [id], onDelete: Cascade)
   
   // Armazenamento de arquivo
-  chaveArquivo      String            // S3 object key
+  chaveArquivo      String            // Chave do objeto S3
   
   // Metadados do certificado (extraídos do .pfx)
   nomeTitular       String            // Nome do titular do certificado
