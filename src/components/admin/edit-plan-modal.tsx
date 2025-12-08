@@ -26,6 +26,8 @@ interface EditPlanModalProps {
         price: number
         description: string | null
         active: boolean
+        limiteUsuarios?: number
+        limiteClientes?: number
     }
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -38,6 +40,8 @@ export function EditPlanModal({ plan, open, onOpenChange }: EditPlanModalProps) 
     const [price, setPrice] = useState(plan.price.toString())
     const [description, setDescription] = useState(plan.description || '')
     const [active, setActive] = useState(plan.active)
+    const [userLimit, setUserLimit] = useState(plan.limiteUsuarios?.toString() || '0')
+    const [clientLimit, setClientLimit] = useState(plan.limiteClientes?.toString() || '0')
     const router = useRouter()
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -50,7 +54,9 @@ export function EditPlanModal({ plan, open, onOpenChange }: EditPlanModalProps) 
                 code,
                 price: parseFloat(price),
                 description,
-                active
+                active,
+                limiteUsuarios: parseInt(userLimit) || 0,
+                limiteClientes: parseInt(clientLimit) || 0
             })
 
             if (result.success) {
@@ -108,6 +114,30 @@ export function EditPlanModal({ plan, open, onOpenChange }: EditPlanModalProps) 
                             onChange={(e) => setPrice(e.target.value)}
                             required
                         />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-userLimit">Limite de Usuários</Label>
+                            <Input
+                                id="edit-userLimit"
+                                type="number"
+                                min="0"
+                                value={userLimit}
+                                onChange={(e) => setUserLimit(e.target.value)}
+                                placeholder="0 = Ilimitado"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-clientLimit">Limite de Clientes</Label>
+                            <Input
+                                id="edit-clientLimit"
+                                type="number"
+                                min="0"
+                                value={clientLimit}
+                                onChange={(e) => setClientLimit(e.target.value)}
+                                placeholder="0 = Ilimitado"
+                            />
+                        </div>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="edit-description">Descrição</Label>

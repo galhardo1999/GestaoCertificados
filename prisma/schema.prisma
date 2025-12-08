@@ -138,6 +138,8 @@ model Plano {
   preco       Float
   descricao   String?
   ativo       Boolean  @default(true)
+  limiteUsuarios Int   @default(0)
+  limiteClientes Int   @default(0)
   criadoEm    DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 

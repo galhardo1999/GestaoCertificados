@@ -30,15 +30,28 @@ export async function getPlans(
     const [plans, total] = await Promise.all([
         prisma.plano.findMany({
             where,
-            orderBy: { codigo: 'desc' },
+            orderBy: { codigo: 'asc' },
             skip,
             take: limit
         }),
         prisma.plano.count({ where })
     ])
 
+    const mappedPlans = plans.map(plan => ({
+        id: plan.id,
+        name: plan.nome,
+        code: plan.codigo,
+        price: plan.preco,
+        description: plan.descricao,
+        active: plan.ativo,
+        limiteUsuarios: plan.limiteUsuarios,
+        limiteClientes: plan.limiteClientes,
+        createdAt: plan.criadoEm,
+        updatedAt: plan.atualizadoEm
+    }))
+
     return {
-        plans,
+        plans: mappedPlans,
         total,
         totalPages: Math.ceil(total / limit)
     }
@@ -49,6 +62,8 @@ export async function createPlan(data: {
     price: number
     description?: string
     active?: boolean
+    limiteUsuarios?: number
+    limiteClientes?: number
 }) {
     const session = await getServerSession(authOptions)
 
@@ -112,7 +127,9 @@ export async function createPlan(data: {
                 codigo: nextCode,
                 preco: data.price,
                 descricao: data.description,
-                ativo: data.active ?? true
+                ativo: data.active ?? true,
+                limiteUsuarios: data.limiteUsuarios ?? 0,
+                limiteClientes: data.limiteClientes ?? 0
             }
         })
         revalidatePath('/admin/planos')
@@ -129,6 +146,8 @@ export async function updatePlan(id: string, data: {
     price?: number
     description?: string
     active?: boolean
+    limiteUsuarios?: number
+    limiteClientes?: number
 }) {
     const session = await getServerSession(authOptions)
 
@@ -154,7 +173,9 @@ export async function updatePlan(id: string, data: {
                 codigo: data.code,
                 preco: data.price,
                 descricao: data.description,
-                ativo: data.active
+                ativo: data.active,
+                limiteUsuarios: data.limiteUsuarios,
+                limiteClientes: data.limiteClientes
             }
         })
         revalidatePath('/admin/planos')

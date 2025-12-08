@@ -26,6 +26,8 @@ export function CreatePlanModal() {
     const [price, setPrice] = useState('')
     const [description, setDescription] = useState('')
     const [active, setActive] = useState(true)
+    const [userLimit, setUserLimit] = useState('')
+    const [clientLimit, setClientLimit] = useState('')
     const router = useRouter()
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -37,7 +39,9 @@ export function CreatePlanModal() {
                 name,
                 price: parseFloat(price),
                 description,
-                active
+                active,
+                limiteUsuarios: parseInt(userLimit) || 0,
+                limiteClientes: parseInt(clientLimit) || 0
             })
 
             if (result.success) {
@@ -47,6 +51,8 @@ export function CreatePlanModal() {
                 setPrice('')
                 setDescription('')
                 setActive(true)
+                setUserLimit('')
+                setClientLimit('')
                 router.refresh()
             } else {
                 toast.error(result.message)
@@ -105,6 +111,30 @@ export function CreatePlanModal() {
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder="Breve descrição do plano"
                         />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="userLimit">Limite de Usuários</Label>
+                            <Input
+                                id="userLimit"
+                                type="number"
+                                min="0"
+                                value={userLimit}
+                                onChange={(e) => setUserLimit(e.target.value)}
+                                placeholder="0 = Ilimitado"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="clientLimit">Limite de Clientes</Label>
+                            <Input
+                                id="clientLimit"
+                                type="number"
+                                min="0"
+                                value={clientLimit}
+                                onChange={(e) => setClientLimit(e.target.value)}
+                                placeholder="0 = Ilimitado"
+                            />
+                        </div>
                     </div>
 
                     <div className="flex items-center space-x-2">

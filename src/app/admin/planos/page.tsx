@@ -55,6 +55,8 @@ export default async function PlansPage({
                             <TableHead>Código</TableHead>
                             <TableHead>Nome</TableHead>
                             <TableHead>Preço</TableHead>
+                            <TableHead>Lim. Usuários</TableHead>
+                            <TableHead>Lim. Clientes</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead className="text-right">Ações</TableHead>
                         </TableRow>
@@ -71,6 +73,12 @@ export default async function PlansPage({
                                     }).format(plan.price)}
                                 </TableCell>
                                 <TableCell>
+                                    {plan.limiteUsuarios === 0 ? 'Ilimitado' : plan.limiteUsuarios}
+                                </TableCell>
+                                <TableCell>
+                                    {plan.limiteClientes === 0 ? 'Ilimitado' : plan.limiteClientes}
+                                </TableCell>
+                                <TableCell>
                                     <Badge variant={plan.active ? 'default' : 'secondary'}>
                                         {plan.active ? 'Ativo' : 'Inativo'}
                                     </Badge>
@@ -82,7 +90,7 @@ export default async function PlansPage({
                         ))}
                         {plans.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                                     Nenhum plano encontrado.
                                 </TableCell>
                             </TableRow>
