@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { updateSettings } from '@/actions/settings-actions'
-import { Loader2, Save, CheckCircle2, AlertCircle, Plus } from 'lucide-react'
+import { Loader2, Save, CheckCircle2, AlertCircle, Plus, ClipboardList } from 'lucide-react'
 import { toast } from 'sonner'
+import Link from 'next/link'
 
 interface SettingsFormProps {
     user: {
@@ -201,39 +202,54 @@ export function SettingsForm({ user, readOnly = false }: SettingsFormProps) {
                 </div>
 
                 {/* Right Column: Logo Upload */}
-                <div className="md:col-span-1 space-y-2">
-                    <Label htmlFor="logo">Logo</Label>
-                    <div className="relative">
-                        <label
-                            htmlFor="logo"
-                            className={`flex flex-col items-center justify-center w-full aspect-square rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 ${!readOnly ? 'hover:bg-gray-100 cursor-pointer' : 'cursor-not-allowed opacity-60'} transition-colors overflow-hidden`}
-                        >
-                            {logoPreview ? (
-                                <img
-                                    src={logoPreview}
-                                    alt="Logo da empresa"
-                                    className="w-full h-full object-contain p-4"
+                <div className="md:col-span-1 space-y-6">
+                    <div className="space-y-2">
+                        <Label htmlFor="logo">Logo</Label>
+                        <div className="relative">
+                            <label
+                                htmlFor="logo"
+                                className={`flex flex-col items-center justify-center w-full aspect-square rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 ${!readOnly ? 'hover:bg-gray-100 cursor-pointer' : 'cursor-not-allowed opacity-60'} transition-colors overflow-hidden`}
+                            >
+                                {logoPreview ? (
+                                    <img
+                                        src={logoPreview}
+                                        alt="Logo da empresa"
+                                        className="w-full h-full object-contain p-4"
+                                    />
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                        <Plus className="w-12 h-12 text-gray-400 mb-2" />
+                                        <p className="text-sm text-gray-500">Adicionar Logo</p>
+                                    </div>
+                                )}
+                                <input
+                                    id="logo"
+                                    name="logo"
+                                    type="file"
+                                    accept="image/png, image/jpeg, image/jpg, image/avif"
+                                    className="hidden"
+                                    onChange={handleLogoChange}
+                                    disabled={readOnly}
                                 />
-                            ) : (
-                                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                    <Plus className="w-12 h-12 text-gray-400 mb-2" />
-                                    <p className="text-sm text-gray-500">Adicionar Logo</p>
-                                </div>
-                            )}
-                            <input
-                                id="logo"
-                                name="logo"
-                                type="file"
-                                accept="image/png, image/jpeg, image/jpg, image/avif"
-                                className="hidden"
-                                onChange={handleLogoChange}
-                                disabled={readOnly}
-                            />
-                        </label>
+                            </label>
+                        </div>
+                        <p className="text-xs text-gray-500 text-center">
+                            Formatos: PNG, JPG, JPEG, AVIF
+                        </p>
                     </div>
-                    <p className="text-xs text-gray-500 text-center">
-                        Formatos: PNG, JPG, JPEG, AVIF
-                    </p>
+
+                    <div className="pt-4 border-t">
+                        <Link
+                            href="/dashboard/logs"
+                            className="flex items-center justify-center gap-2 w-full p-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-medium text-sm border border-slate-200"
+                        >
+                            <ClipboardList className="h-4 w-4" />
+                            Visualizar Logs do Sistema
+                        </Link>
+                        <p className="text-xs text-gray-500 text-center mt-2">
+                            Histórico de ações e alterações
+                        </p>
+                    </div>
                 </div>
 
             </div>

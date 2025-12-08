@@ -38,6 +38,7 @@ model Usuario {
   usuarioMestreId  String?
   usuarioMestre    Usuario?      @relation("MembrosEquipe", fields: [usuarioMestreId], references: [id])
   membrosEquipe    Usuario[]     @relation("MembrosEquipe")
+  logs             LogAuditoria[]
 
   @@map("usuarios")
 }
@@ -141,4 +142,35 @@ model Plano {
   atualizadoEm DateTime @updatedAt
 
   @@map("planos")
+}
+
+model LogAuditoria {
+  id          String   @id @default(cuid())
+  usuarioId   String
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  acao        AcaoAuditoria
+  entidade    EntidadeAuditoria
+  entidadeId  String?
+  detalhes    String?
+  criadoEm    DateTime @default(now())
+
+  @@index([usuarioId])
+  @@index([acao])
+  @@index([entidade])
+  @@map("logs_auditoria")
+}
+
+enum AcaoAuditoria {
+  CRIAR
+  ATUALIZAR
+  EXCLUIR
+  LOGIN
+}
+
+enum EntidadeAuditoria {
+  CLIENTE
+  CERTIFICADO
+  USUARIO
+  PLANO
+  SISTEMA
 }

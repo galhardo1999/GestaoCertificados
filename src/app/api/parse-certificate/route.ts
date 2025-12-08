@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { parseCertificate } from '@/lib/certificate-parser'
 
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+
 export async function POST(request: NextRequest) {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+        return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
+
     try {
         const formData = await request.formData()
         const file = formData.get('file') as File

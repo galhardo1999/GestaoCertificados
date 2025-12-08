@@ -6,8 +6,16 @@ import { parseStringPromise } from 'xml2js';
 import { prisma } from '@/lib/prisma';
 import { getSignedDownloadUrl } from '@/lib/s3';
 
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+
 export async function POST(req: Request) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session) {
+            return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+        }
+
         const { clientId, accessKey, password } = await req.json();
 
         if (!clientId || !accessKey || !password) {

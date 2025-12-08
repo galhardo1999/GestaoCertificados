@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Users, Shield, ChevronLeft, ChevronRight, LogOut, Settings, FileText } from 'lucide-react'
+import { Home, Users, Shield, ChevronLeft, ChevronRight, LogOut, Settings, FileText, ClipboardList } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -99,6 +99,7 @@ export function Sidebar({ user }: SidebarProps) {
                     </div>
                 )}
             </div>
+
 
 
             {/* Navigation */}

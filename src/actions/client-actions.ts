@@ -6,6 +6,7 @@ import { parseCertificate, isPfxFile } from '@/lib/certificate-parser'
 import { revalidatePath } from 'next/cache'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { createAuditLog } from '@/lib/audit'
 
 export interface CreateClientResult {
     success: boolean
@@ -127,6 +128,20 @@ export async function createClient(
             })
         }
 
+        if (client) {
+            const session = await getServerSession(authOptions)
+            const actorId = session?.user?.id || userId
+
+            await createAuditLog({
+                userId: actorId,
+                action: 'CRIAR',
+                entity: 'CLIENTE',
+                entityId: client.id,
+                details: `Cliente ${companyName} (${cnpj}) criado`
+            })
+        }
+
+
         revalidatePath('/dashboard/clientes')
 
         return {
@@ -204,6 +219,20 @@ export async function deleteClient(clientId: string) {
         )
 
         // Excluir cliente (cascade excluirá certificados do BD)
+        const client = await prisma.cliente.findUnique({ where: { id: clientId } })
+        if (client) {
+            const session = await getServerSession(authOptions)
+            const actorId = session?.user?.id || client.usuarioId
+
+            await createAuditLog({
+                userId: actorId,
+                action: 'EXCLUIR',
+                entity: 'CLIENTE',
+                entityId: clientId,
+                details: `Cliente ${client.nomeEmpresa} excluído`
+            })
+        }
+
         await prisma.cliente.delete({
             where: { id: clientId },
         })
@@ -227,6 +256,12 @@ export async function updateClient(clientId: string, data: {
     state?: string
 }) {
     try {
+        // Fetch client before update to get userId for log if needed, or pass userId to function.
+        // Similar to delete, updateClient only takes clientId.
+        // Ideally we should get session user ID.
+
+        const client = await prisma.cliente.findUnique({ where: { id: clientId } })
+
         await prisma.cliente.update({
             where: { id: clientId },
             data: {
@@ -240,6 +275,19 @@ export async function updateClient(clientId: string, data: {
                 estado: data.state || null,
             },
         })
+
+        if (client) {
+            const session = await getServerSession(authOptions)
+            const actorId = session?.user?.id || client.usuarioId
+
+            await createAuditLog({
+                userId: actorId,
+                action: 'ATUALIZAR',
+                entity: 'CLIENTE',
+                entityId: clientId,
+                details: `Cliente ${data.companyName} atualizado`
+            })
+        }
 
         revalidatePath('/dashboard/clientes')
         return { success: true, message: 'Cliente atualizado com sucesso' }
@@ -288,7 +336,7 @@ export async function addCertificate(
         })
 
         // Criar certificado vinculado ao cliente
-        await prisma.certificado.create({
+        const cert = await prisma.certificado.create({
             data: {
                 usuarioId: userId,
                 clienteId: clientId,
@@ -302,6 +350,17 @@ export async function addCertificate(
                     subject: metadata.subject,
                 },
             },
+        })
+
+        const session = await getServerSession(authOptions)
+        const actorId = session?.user?.id || userId
+
+        await createAuditLog({
+            userId: actorId,
+            action: 'CRIAR',
+            entity: 'CERTIFICADO',
+            entityId: cert.id,
+            details: `Certificado ${metadata.holderName} adicionado`
         })
 
         revalidatePath('/dashboard/clientes')
@@ -339,6 +398,14 @@ export async function deleteCertificate(certificateId: string) {
         // Excluir certificado do BD
         await prisma.certificado.delete({
             where: { id: certificateId },
+        })
+
+        await createAuditLog({
+            userId,
+            action: 'EXCLUIR',
+            entity: 'CERTIFICADO',
+            entityId: certificateId,
+            details: 'Certificado excluído'
         })
 
         revalidatePath('/dashboard/clientes')
@@ -437,7 +504,7 @@ export async function processCertificateAndCreateClient(
             userId,
         })
 
-        await prisma.certificado.create({
+        const cert = await prisma.certificado.create({
             data: {
                 usuarioId: userId,
                 clienteId: clientId,
@@ -451,6 +518,29 @@ export async function processCertificateAndCreateClient(
                     subject: metadata.subject,
                 },
             },
+        })
+
+        const session = await getServerSession(authOptions)
+        const actorId = session?.user?.id || userId
+
+        // Log Client Creation if it was newly created
+        if (!existingClient) {
+            await createAuditLog({
+                userId: actorId,
+                action: 'CRIAR',
+                entity: 'CLIENTE',
+                entityId: clientId,
+                details: `Cliente ${companyName} (${metadata.cnpj}) importado via arquivo`
+            })
+        }
+
+        // Log Certificate Creation
+        await createAuditLog({
+            userId: actorId,
+            action: 'CRIAR',
+            entity: 'CERTIFICADO',
+            entityId: cert.id,
+            details: `Certificado ${metadata.holderName} importado via arquivo`
         })
 
         revalidatePath('/dashboard/clientes')

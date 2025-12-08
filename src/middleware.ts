@@ -9,14 +9,21 @@ export default withAuth(
         ) {
             return NextResponse.redirect(new URL('/dashboard', req.url))
         }
+
+        if (req.nextUrl.pathname === '/login' && req.nextauth.token) {
+            return NextResponse.redirect(new URL('/dashboard', req.url))
+        }
     },
     {
         callbacks: {
-            authorized: ({ token }) => !!token,
+            authorized: ({ token, req }) => {
+                if (req.nextUrl.pathname === '/login') return true
+                return !!token
+            },
         },
     }
 )
 
 export const config = {
-    matcher: ['/dashboard/:path*', '/admin/:path*'],
+    matcher: ['/dashboard/:path*', '/admin/:path*', '/login'],
 }
