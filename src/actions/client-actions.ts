@@ -19,7 +19,8 @@ export async function createClient(
 ): Promise<CreateClientResult> {
     try {
         const companyName = formData.get('companyName') as string
-        const cnpj = formData.get('cnpj') as string
+        const rawCnpj = formData.get('cnpj') as string
+        const cnpj = rawCnpj ? rawCnpj.replace(/\D/g, '') : ''
         const phone = formData.get('phone') as string
         const address = formData.get('address') as string
         const number = formData.get('number') as string
@@ -37,27 +38,45 @@ export async function createClient(
             }
         }
 
-        // Criar cliente
-        const client = await prisma.cliente.create({
-            data: {
+        // Verificar se já existe cliente com este CNPJ para este usuário
+        const existingClient = await prisma.cliente.findFirst({
+            where: {
                 usuarioId: userId,
-                nomeEmpresa: companyName,
-                cnpj,
-                telefone: phone || null,
-                endereco: address || null,
-                numero: number || null,
-                bairro: neighborhood || null,
-                cidade: city || null,
-                estado: state || null,
-            },
+                cnpj: cnpj
+            }
         })
+
+        let client;
+
+        if (existingClient) {
+            // Se existe, usar o cliente existente
+            client = existingClient;
+        } else {
+            // Criar cliente se não existir
+            client = await prisma.cliente.create({
+                data: {
+                    usuarioId: userId,
+                    nomeEmpresa: companyName,
+                    cnpj,
+                    telefone: phone || null,
+                    endereco: address || null,
+                    numero: number || null,
+                    bairro: neighborhood || null,
+                    cidade: city || null,
+                    estado: state || null,
+                },
+            })
+        }
 
         // Se um arquivo de certificado for fornecido, fazer upload
         if (file && file.size > 0) {
             // Validar tipo de arquivo
             if (!file.name.endsWith('.pfx') && !file.name.endsWith('.p12')) {
-                // Excluir o cliente se o upload do certificado falhar
-                await prisma.cliente.delete({ where: { id: client.id } })
+                // Se o cliente foi criado agora, deveríamos deletar. Mas se for existente, NÃO.
+                // Como simplificação inicial, não vamos deletar o cliente existente.
+                if (!existingClient) {
+                    await prisma.cliente.delete({ where: { id: client.id } })
+                }
                 return {
                     success: false,
                     message: 'Arquivo deve ser do tipo .pfx ou .p12',
@@ -70,7 +89,9 @@ export async function createClient(
 
             // Validar se é um arquivo PFX válido
             if (!isPfxFile(fileBuffer)) {
-                await prisma.cliente.delete({ where: { id: client.id } })
+                if (!existingClient) {
+                    await prisma.cliente.delete({ where: { id: client.id } })
+                }
                 return {
                     success: false,
                     message: 'Arquivo .pfx inválido ou corrompido',

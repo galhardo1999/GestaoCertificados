@@ -147,20 +147,18 @@ export function CertificateTable({ certificates, onDelete, showAsClients = false
                                     </TableCell>
                                     <TableCell>{formatDateBR(cert.expirationDate)}</TableCell>
                                     <TableCell>
-                                        <TableCell>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className={cert.client?.phone
-                                                    ? "text-green-600 hover:text-green-700 hover:bg-green-50"
-                                                    : "text-gray-300 hover:text-gray-400 hover:bg-gray-50"
-                                                }
-                                                onClick={() => handleWhatsApp(cert)}
-                                                title={cert.client?.phone ? "Enviar mensagem no WhatsApp" : "Cliente sem telefone cadastrado"}
-                                            >
-                                                <WhatsAppIcon className="h-5 w-5" />
-                                            </Button>
-                                        </TableCell>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className={cert.client?.phone
+                                                ? "text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                : "text-gray-300 hover:text-gray-400 hover:bg-gray-50"
+                                            }
+                                            onClick={() => handleWhatsApp(cert)}
+                                            title={cert.client?.phone ? "Enviar mensagem no WhatsApp" : "Cliente sem telefone cadastrado"}
+                                        >
+                                            <WhatsAppIcon className="h-5 w-5" />
+                                        </Button>
                                     </TableCell>
                                 </>
                             ) : (

@@ -4,8 +4,9 @@ import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useDebouncedCallback } from 'use-debounce'
+import { cn } from '@/lib/utils'
 
-export function SearchInput() {
+export function SearchInput({ className }: { className?: string }) {
     const searchParams = useSearchParams()
     const { replace } = useRouter()
 
@@ -20,7 +21,7 @@ export function SearchInput() {
     }, 300)
 
     return (
-        <div className="relative w-full max-w-xl">
+        <div className={cn("relative w-full max-w-xl", className)}>
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
             <Input
                 type="search"

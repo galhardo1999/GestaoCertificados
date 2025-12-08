@@ -37,7 +37,7 @@ export default async function PlansPage({
                     </p>
                 </div>
                 <div className="flex items-center gap-4">
-                    <SearchInput />
+                    <SearchInput className="w-[500px]" />
                     <CreatePlanModal />
                 </div>
             </div>

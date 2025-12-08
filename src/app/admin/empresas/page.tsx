@@ -41,7 +41,7 @@ export default async function UsersPage({
                     </p>
                 </div>
                 <div className="flex items-center gap-4">
-                    <SearchInput />
+                    <SearchInput className="w-[500px]" />
                     <CreateUserModal />
                 </div>
             </div>

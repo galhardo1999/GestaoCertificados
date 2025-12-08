@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { signOut } from 'next-auth/react'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 const menuItems = [
     {
@@ -31,9 +32,28 @@ const menuItems = [
     },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+    user?: {
+        name?: string | null
+        email?: string | null
+        image?: string | null
+    }
+}
+
+export function Sidebar({ user }: SidebarProps) {
     const pathname = usePathname()
     const [isExpanded, setIsExpanded] = useState(true)
+
+    // Get initials for avatar
+    const getInitials = (name?: string | null) => {
+        if (!name) return 'U'
+        return name
+            .split(' ')
+            .map((n) => n[0])
+            .join('')
+            .toUpperCase()
+            .substring(0, 2)
+    }
 
     return (
         <div
@@ -109,16 +129,42 @@ export function Sidebar() {
 
             {/* Footer */}
             <div className="border-t border-gray-200 p-3">
+                {/* User Info */}
+                {user && (
+                    <div className={cn(
+                        "flex items-center gap-3 mb-3",
+                        !isExpanded && "justify-center"
+                    )}>
+                        <Avatar className="h-9 w-9">
+                            <AvatarImage src={user.image || undefined} />
+                            <AvatarFallback className="bg-blue-600 text-white">
+                                {getInitials(user.name)}
+                            </AvatarFallback>
+                        </Avatar>
+
+                        {isExpanded && (
+                            <div className="flex flex-col overflow-hidden">
+                                <span className="text-sm font-medium text-gray-900 truncate">
+                                    {user.name || 'Usuário'}
+                                </span>
+                                <span className="text-xs text-gray-500 truncate">
+                                    {user.email}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 <Button
-                    variant="ghost"
+                    variant="outline"
                     className={cn(
-                        'w-full flex items-center gap-3 justify-start text-red-600 hover:text-red-700 hover:bg-red-50',
-                        !isExpanded && 'justify-center px-2'
+                        'w-full flex items-center gap-2 justify-center',
+                        !isExpanded && 'px-0'
                     )}
                     onClick={() => signOut({ callbackUrl: '/login' })}
                     title={!isExpanded ? 'Sair' : undefined}
                 >
-                    <LogOut className="h-5 w-5 flex-shrink-0" />
+                    <LogOut className="h-4 w-4" />
                     {isExpanded && <span>Sair</span>}
                 </Button>
             </div>

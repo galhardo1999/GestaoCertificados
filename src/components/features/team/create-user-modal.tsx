@@ -144,6 +144,35 @@ export function CreateUserModal() {
                         <h3 className="text-sm font-medium text-gray-500 border-b pb-1">Informações de Acesso</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2 md:col-span-2">
+                                <Label htmlFor="cnpj">CNPJ</Label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        id="cnpj"
+                                        value={cnpj}
+                                        onChange={(e) => setCnpj(e.target.value)}
+                                        placeholder="00.000.000/0000-00"
+                                        onBlur={(e) => {
+                                            if (e.target.value.replace(/\D/g, '').length === 14) {
+                                                handleCnpjSearch()
+                                            }
+                                        }}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={handleCnpjSearch}
+                                        disabled={searchingCnpj}
+                                    >
+                                        {searchingCnpj ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <Search className="h-4 w-4" />
+                                        )}
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
                                 <Label htmlFor="name">Nome da Empresa</Label>
                                 <Input
                                     id="name"
@@ -182,36 +211,8 @@ export function CreateUserModal() {
                     {/* Contato (CNPJ, Telefones) */}
                     <div className="space-y-4">
                         <h3 className="text-sm font-medium text-gray-500 border-b pb-1">Contato</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="cnpj">CNPJ</Label>
-                                <div className="flex gap-2">
-                                    <Input
-                                        id="cnpj"
-                                        value={cnpj}
-                                        onChange={(e) => setCnpj(e.target.value)}
-                                        placeholder="00.000.000/0000-00"
-                                        onBlur={(e) => {
-                                            if (e.target.value.replace(/\D/g, '').length === 14) {
-                                                handleCnpjSearch()
-                                            }
-                                        }}
-                                    />
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={handleCnpjSearch}
-                                        disabled={searchingCnpj}
-                                    >
-                                        {searchingCnpj ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                        ) : (
-                                            <Search className="h-4 w-4" />
-                                        )}
-                                    </Button>
-                                </div>
-                            </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
                             <div className="space-y-2">
                                 <Label htmlFor="phone1">Telefone 1</Label>
                                 <Input
