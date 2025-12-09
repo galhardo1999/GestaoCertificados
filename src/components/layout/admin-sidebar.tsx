@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Users, Shield, ChevronLeft, ChevronRight, LogOut, Building2 } from 'lucide-react'
+import { Home, Users, Shield, ChevronLeft, ChevronRight, LogOut, Building2, LayoutDashboard } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -103,7 +103,19 @@ export function AdminSidebar() {
             </nav>
 
             {/* Footer */}
-            <div className="border-t border-slate-800 p-3">
+            <div className="border-t border-slate-800 p-3 space-y-2">
+                <Link
+                    href="/dashboard"
+                    className={cn(
+                        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-slate-400 hover:bg-slate-800 hover:text-white',
+                        !isExpanded && 'justify-center'
+                    )}
+                    title={!isExpanded ? 'Dashboard' : undefined}
+                >
+                    <LayoutDashboard className="h-5 w-5 flex-shrink-0" />
+                    {isExpanded && <span>Dashboard</span>}
+                </Link>
+
                 <Button
                     variant="ghost"
                     className={cn(
