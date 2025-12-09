@@ -39,20 +39,20 @@ export function AuditLogTable({ logs }: { logs: AuditLog[] }) {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Data/Hora</TableHead>
-                        <TableHead>Usuário</TableHead>
-                        <TableHead>Ação</TableHead>
-                        <TableHead>Entidade</TableHead>
-                        <TableHead>Detalhes</TableHead>
+                        <TableHead className="text-xs">Data/Hora</TableHead>
+                        <TableHead className="text-xs">Usuário</TableHead>
+                        <TableHead className="text-xs">Ação</TableHead>
+                        <TableHead className="text-xs">Entidade</TableHead>
+                        <TableHead className="text-xs">Detalhes</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {logs.map((log) => (
                         <TableRow key={log.id}>
-                            <TableCell className="font-medium">
+                            <TableCell className="font-medium text-xs">
                                 {format(new Date(log.criadoEm), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="text-xs">
                                 <span className="font-medium">{log.usuario.email}</span>
                             </TableCell>
                             <TableCell>
@@ -60,8 +60,8 @@ export function AuditLogTable({ logs }: { logs: AuditLog[] }) {
                                     {log.acao}
                                 </Badge>
                             </TableCell>
-                            <TableCell>{log.entidade}</TableCell>
-                            <TableCell className="text-muted-foreground text-sm">
+                            <TableCell className="text-xs">{log.entidade}</TableCell>
+                            <TableCell className="text-muted-foreground text-xs">
                                 {log.detalhes || '-'}
                             </TableCell>
                         </TableRow>
